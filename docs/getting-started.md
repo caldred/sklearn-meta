@@ -1,6 +1,6 @@
 # Getting Started
 
-Get up and running with auto-sklearn in minutes.
+Get up and running with sklearn-meta in minutes.
 
 ---
 
@@ -65,7 +65,7 @@ X_test = pd.DataFrame(X_test)
 ### Step 2: Define a Search Space
 
 ```python
-from auto_sklearn.search.space import SearchSpace
+from sklearn_meta.search.space import SearchSpace
 
 space = SearchSpace()
 space.add_int("n_estimators", 50, 300)
@@ -78,7 +78,7 @@ space.add_categorical("criterion", ["gini", "entropy"])
 
 ```python
 from sklearn.ensemble import RandomForestClassifier
-from auto_sklearn.core.model.node import ModelNode
+from sklearn_meta.core.model.node import ModelNode
 
 node = ModelNode(
     name="rf",
@@ -91,7 +91,7 @@ node = ModelNode(
 ### Step 4: Build the Model Graph
 
 ```python
-from auto_sklearn.core.model.graph import ModelGraph
+from sklearn_meta.core.model.graph import ModelGraph
 
 graph = ModelGraph()
 graph.add_node(node)
@@ -100,11 +100,11 @@ graph.add_node(node)
 ### Step 5: Configure and Run Tuning
 
 ```python
-from auto_sklearn.core.data.context import DataContext
-from auto_sklearn.core.data.cv import CVConfig, CVStrategy
-from auto_sklearn.core.data.manager import DataManager
-from auto_sklearn.core.tuning.orchestrator import TuningConfig, TuningOrchestrator
-from auto_sklearn.core.tuning.strategy import OptimizationStrategy
+from sklearn_meta.core.data.context import DataContext
+from sklearn_meta.core.data.cv import CVConfig, CVStrategy
+from sklearn_meta.core.data.manager import DataManager
+from sklearn_meta.core.tuning.orchestrator import TuningConfig, TuningOrchestrator
+from sklearn_meta.core.tuning.strategy import OptimizationStrategy
 
 # Create data context
 ctx = DataContext(X=X_train, y=y_train)
@@ -165,14 +165,14 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, roc_auc_score
 
-from auto_sklearn.core.data.context import DataContext
-from auto_sklearn.core.data.cv import CVConfig, CVStrategy
-from auto_sklearn.core.data.manager import DataManager
-from auto_sklearn.core.model.node import ModelNode
-from auto_sklearn.core.model.graph import ModelGraph
-from auto_sklearn.core.tuning.orchestrator import TuningConfig, TuningOrchestrator
-from auto_sklearn.core.tuning.strategy import OptimizationStrategy
-from auto_sklearn.search.space import SearchSpace
+from sklearn_meta.core.data.context import DataContext
+from sklearn_meta.core.data.cv import CVConfig, CVStrategy
+from sklearn_meta.core.data.manager import DataManager
+from sklearn_meta.core.model.node import ModelNode
+from sklearn_meta.core.model.graph import ModelGraph
+from sklearn_meta.core.tuning.orchestrator import TuningConfig, TuningOrchestrator
+from sklearn_meta.core.tuning.strategy import OptimizationStrategy
+from sklearn_meta.search.space import SearchSpace
 
 # Data
 X, y = make_classification(n_samples=1000, n_features=20, random_state=42)

@@ -130,16 +130,16 @@ graph TB
 ### Basic Usage
 
 ```python
-from auto_sklearn.core.model.joint_quantile_graph import (
+from sklearn_meta.core.model.joint_quantile_graph import (
     JointQuantileGraph, JointQuantileConfig, OrderConstraint
 )
-from auto_sklearn.core.model.quantile_node import QuantileScalingConfig
-from auto_sklearn.core.model.joint_quantile_fitted import JointQuantileFittedGraph
-from auto_sklearn.core.tuning.joint_quantile_orchestrator import JointQuantileOrchestrator
-from auto_sklearn.core.data.context import DataContext
-from auto_sklearn.core.data.cv import CVConfig, CVStrategy
-from auto_sklearn.core.data.manager import DataManager
-from auto_sklearn.core.tuning.orchestrator import TuningConfig
+from sklearn_meta.core.model.quantile_node import QuantileScalingConfig
+from sklearn_meta.core.model.joint_quantile_fitted import JointQuantileFittedGraph
+from sklearn_meta.core.tuning.joint_quantile_orchestrator import JointQuantileOrchestrator
+from sklearn_meta.core.data.context import DataContext
+from sklearn_meta.core.data.cv import CVConfig, CVStrategy
+from sklearn_meta.core.data.manager import DataManager
+from sklearn_meta.core.tuning.orchestrator import TuningConfig
 from xgboost import XGBRegressor
 
 # 1. Configure
@@ -269,7 +269,7 @@ config = JointQuantileConfig(
 Fit a parametric distribution to quantiles:
 
 ```python
-from auto_sklearn.core.model.quantile_sampler import SamplingStrategy
+from sklearn_meta.core.model.quantile_sampler import SamplingStrategy
 
 # Normal distribution
 config = JointQuantileConfig(
@@ -297,7 +297,7 @@ config = JointQuantileConfig(
 The order of properties affects model quality. Use `OrderSearchPlugin` to find a good ordering:
 
 ```python
-from auto_sklearn.plugins.joint_quantile.order_search import (
+from sklearn_meta.plugins.joint_quantile.order_search import (
     OrderSearchPlugin, OrderSearchConfig
 )
 
@@ -415,18 +415,18 @@ import numpy as np
 import pandas as pd
 from xgboost import XGBRegressor
 
-from auto_sklearn.core.data.context import DataContext
-from auto_sklearn.core.data.cv import CVConfig, CVStrategy
-from auto_sklearn.core.data.manager import DataManager
-from auto_sklearn.core.model.joint_quantile_graph import (
+from sklearn_meta.core.data.context import DataContext
+from sklearn_meta.core.data.cv import CVConfig, CVStrategy
+from sklearn_meta.core.data.manager import DataManager
+from sklearn_meta.core.model.joint_quantile_graph import (
     JointQuantileGraph, JointQuantileConfig, OrderConstraint
 )
-from auto_sklearn.core.model.quantile_node import QuantileScalingConfig
-from auto_sklearn.core.model.joint_quantile_fitted import JointQuantileFittedGraph
-from auto_sklearn.core.tuning.joint_quantile_orchestrator import JointQuantileOrchestrator
-from auto_sklearn.core.tuning.orchestrator import TuningConfig
-from auto_sklearn.search.backends.optuna import OptunaBackend
-from auto_sklearn.search.space import SearchSpace
+from sklearn_meta.core.model.quantile_node import QuantileScalingConfig
+from sklearn_meta.core.model.joint_quantile_fitted import JointQuantileFittedGraph
+from sklearn_meta.core.tuning.joint_quantile_orchestrator import JointQuantileOrchestrator
+from sklearn_meta.core.tuning.orchestrator import TuningConfig
+from sklearn_meta.search.backends.optuna import OptunaBackend
+from sklearn_meta.search.space import SearchSpace
 
 # === Generate Synthetic Correlated Data ===
 np.random.seed(42)

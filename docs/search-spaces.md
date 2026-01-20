@@ -1,6 +1,6 @@
 # Search Spaces
 
-Search spaces define the hyperparameters that will be optimized during tuning. Auto-sklearn provides a flexible, fluent API for defining parameter ranges, types, and constraints.
+Search spaces define the hyperparameters that will be optimized during tuning. sklearn-meta provides a flexible, fluent API for defining parameter ranges, types, and constraints.
 
 ---
 
@@ -9,7 +9,7 @@ Search spaces define the hyperparameters that will be optimized during tuning. A
 ### Creating a Search Space
 
 ```python
-from auto_sklearn.search.space import SearchSpace
+from sklearn_meta.search.space import SearchSpace
 
 space = SearchSpace()
 space.add_int("n_estimators", 50, 200)
@@ -101,7 +101,7 @@ graph TD
 ```
 
 ```python
-from auto_sklearn.search.parameter import FloatParameter
+from sklearn_meta.search.parameter import FloatParameter
 
 space = SearchSpace()
 space.add_categorical("optimizer", ["adam", "sgd", "rmsprop"])

@@ -1,6 +1,141 @@
 # API Reference
 
-Complete API documentation for auto-sklearn.
+Complete API documentation for sklearn-meta.
+
+---
+
+## GraphBuilder (Fluent API)
+
+```python
+from sklearn_meta import GraphBuilder
+```
+
+A fluent API for building model graphs with minimal boilerplate. Provides a chainable interface for defining models, search spaces, dependencies, and tuning configuration.
+
+```python
+GraphBuilder(name: str = "pipeline")
+```
+
+**Methods:**
+```python
+# Add a model to the graph
+add_model(name: str, estimator_class: type) -> NodeBuilder
+
+# Configure cross-validation
+with_cv(
+    n_splits: int = 5,
+    n_repeats: int = 1,
+    strategy: str | CVStrategy = "stratified",
+    shuffle: bool = True,
+    random_state: int = 42,
+    nested: bool = False,
+    inner_splits: int = 3,
+) -> GraphBuilder
+
+# Configure hyperparameter tuning
+with_tuning(
+    n_trials: int = 100,
+    timeout: float | None = None,
+    strategy: str | OptimizationStrategy = "layer_by_layer",
+    metric: str = "neg_mean_squared_error",
+    greater_is_better: bool = False,
+    early_stopping_rounds: int | None = None,
+) -> GraphBuilder
+
+# Configure feature selection
+with_feature_selection(
+    method: str = "shadow",
+    n_shadows: int = 5,
+    threshold_mult: float = 1.414,
+    retune_after_pruning: bool = True,
+    min_features: int = 1,
+    max_features: int | None = None,
+) -> GraphBuilder
+
+# Configure reparameterization
+with_reparameterization(
+    reparameterizations: list[Reparameterization] | None = None,
+    use_prebaked: bool = True,
+) -> GraphBuilder
+
+# Build the ModelGraph
+build() -> ModelGraph
+
+# Create TuningOrchestrator
+create_orchestrator(search_backend: SearchBackend | None = None) -> TuningOrchestrator
+
+# Build and fit in one step
+fit(X, y, groups=None, search_backend=None) -> FittedGraph
+```
+
+### NodeBuilder
+
+Returned by `add_model()` for configuring individual nodes.
+
+```python
+# Set search space (shorthand syntax)
+with_search_space(
+    space: SearchSpace | None = None,
+    **kwargs,  # e.g., n_estimators=(50, 500), max_depth=(3, 20)
+) -> NodeBuilder
+
+# Set output type
+with_output_type(output_type: str) -> NodeBuilder  # "prediction", "proba", "transform"
+
+# Set execution condition
+with_condition(condition: Callable[[DataContext], bool]) -> NodeBuilder
+
+# Add plugins
+with_plugins(*plugins: str) -> NodeBuilder
+
+# Set fixed (non-tuned) parameters
+with_fixed_params(**params) -> NodeBuilder
+
+# Set fit parameters
+with_fit_params(**params) -> NodeBuilder
+
+# Specify features to use
+with_features(*feature_cols: str) -> NodeBuilder
+
+# Add description
+with_description(description: str) -> NodeBuilder
+
+# Add dependencies
+depends_on(*sources: str, dep_type: DependencyType = DependencyType.PREDICTION) -> NodeBuilder
+stacks(*sources: str) -> NodeBuilder           # Shortcut for prediction dependencies
+stacks_proba(*sources: str) -> NodeBuilder     # Shortcut for probability dependencies
+```
+
+**Example:**
+```python
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn_meta import GraphBuilder
+
+# Build a stacking pipeline with fluent API
+fitted = (
+    GraphBuilder("stacking_pipeline")
+    .add_model("rf", RandomForestClassifier)
+    .with_search_space(
+        n_estimators=(50, 300),
+        max_depth=(3, 15),
+    )
+    .with_fixed_params(random_state=42, n_jobs=-1)
+    .add_model("gbm", GradientBoostingClassifier)
+    .with_search_space(
+        n_estimators=(50, 200),
+        learning_rate=(0.01, 0.3, "log"),
+        max_depth=(3, 8),
+    )
+    .add_model("meta", LogisticRegression)
+    .stacks("rf", "gbm")
+    .with_cv(n_splits=5, strategy="stratified")
+    .with_tuning(n_trials=50, metric="roc_auc", greater_is_better=True)
+    .fit(X_train, y_train)
+)
+
+predictions = fitted.predict(X_test)
+```
 
 ---
 
@@ -9,7 +144,7 @@ Complete API documentation for auto-sklearn.
 ### DataContext
 
 ```python
-from auto_sklearn.core.data.context import DataContext
+from sklearn_meta.core.data.context import DataContext
 ```
 
 Immutable container for training data and metadata.
@@ -49,7 +184,7 @@ ctx.with_upstream(predictions: dict) -> DataContext
 ### CVConfig
 
 ```python
-from auto_sklearn.core.data.cv import CVConfig, CVStrategy
+from sklearn_meta.core.data.cv import CVConfig, CVStrategy
 ```
 
 Cross-validation configuration.
@@ -77,7 +212,7 @@ CVConfig(
 ### DataManager
 
 ```python
-from auto_sklearn.core.data.manager import DataManager
+from sklearn_meta.core.data.manager import DataManager
 ```
 
 Manages CV fold creation and data routing.
@@ -106,7 +241,7 @@ route_oof_predictions(
 ### ModelNode
 
 ```python
-from auto_sklearn.core.model.node import ModelNode
+from sklearn_meta.core.model.node import ModelNode
 ```
 
 Represents a single model in the graph.
@@ -137,7 +272,7 @@ get_params(tuned_params: dict) -> dict
 ### ModelGraph
 
 ```python
-from auto_sklearn.core.model.graph import ModelGraph
+from sklearn_meta.core.model.graph import ModelGraph
 ```
 
 Directed acyclic graph of model nodes.
@@ -176,7 +311,7 @@ get_node(name: str) -> ModelNode
 ### Dependency Types
 
 ```python
-from auto_sklearn.core.model.dependency import (
+from sklearn_meta.core.model.dependency import (
     PredictionDependency,
     ProbaDependency,
     TransformDependency,
@@ -194,8 +329,8 @@ from auto_sklearn.core.model.dependency import (
 ### TuningConfig
 
 ```python
-from auto_sklearn.core.tuning.orchestrator import TuningConfig
-from auto_sklearn.core.tuning.strategy import OptimizationStrategy
+from sklearn_meta.core.tuning.orchestrator import TuningConfig
+from sklearn_meta.core.tuning.strategy import OptimizationStrategy
 ```
 
 ```python
@@ -224,7 +359,7 @@ TuningConfig(
 ### TuningOrchestrator
 
 ```python
-from auto_sklearn.core.tuning.orchestrator import TuningOrchestrator
+from sklearn_meta.core.tuning.orchestrator import TuningOrchestrator
 ```
 
 ```python
@@ -250,7 +385,7 @@ fit(ctx: DataContext) -> FittedGraph
 ### SearchSpace
 
 ```python
-from auto_sklearn.search.space import SearchSpace
+from sklearn_meta.search.space import SearchSpace
 ```
 
 ```python
@@ -299,7 +434,7 @@ SearchSpace.from_dict(config: dict) -> SearchSpace
 ### Parameter Classes
 
 ```python
-from auto_sklearn.search.parameter import (
+from sklearn_meta.search.parameter import (
     FloatParameter,
     IntParameter,
     CategoricalParameter,
@@ -318,10 +453,84 @@ ConditionalParameter(name, parent_name, parent_value, parameter)
 
 ## Meta Module
 
+### CorrelationAnalyzer
+
+```python
+from sklearn_meta.meta.correlation import CorrelationAnalyzer, HyperparameterCorrelation, CorrelationType
+```
+
+Analyzes optimization history to discover hyperparameter correlations. This helps identify parameters that provide similar effects, have tradeoff relationships, or should be tuned together.
+
+```python
+CorrelationAnalyzer(
+    min_trials: int = 20,              # Minimum trials for reliable analysis
+    significance_threshold: float = 0.1,  # P-value threshold
+    correlation_threshold: float = 0.3,   # Minimum correlation to report
+)
+```
+
+**Methods:**
+```python
+# Analyze optimization results for correlations
+analyze(
+    optimization_result: OptimizationResult,
+    param_names: list[str] | None = None,
+) -> list[HyperparameterCorrelation]
+
+# Suggest reparameterizations based on discovered correlations
+suggest_reparameterization(
+    correlations: list[HyperparameterCorrelation],
+) -> dict  # {"substitutes": [...], "tradeoffs": [...], "correlation_details": [...]}
+```
+
+**CorrelationType Enum:**
+| Value | Description |
+|-------|-------------|
+| `SUBSTITUTE` | Parameters providing similar effects (e.g., L1 and L2 regularization) |
+| `COMPLEMENT` | Parameters that work together and move in the same direction |
+| `TRADEOFF` | Parameters with inverse relationship (e.g., learning_rate × n_estimators) |
+| `CONDITIONAL` | One parameter's optimal value depends on another |
+
+**HyperparameterCorrelation:**
+```python
+@dataclass
+class HyperparameterCorrelation:
+    params: list[str]                    # Correlated parameter names
+    correlation_type: CorrelationType    # Type of correlation
+    strength: float                      # Correlation strength (0 to 1)
+    functional_form: str                 # Description of relationship
+    transform: Callable | None           # Transform to effective value
+    inverse_transform: Callable | None   # Recover original params
+    confidence: float                    # Confidence based on sample size
+
+    # Methods
+    effective_value(param_values: dict[str, float]) -> float
+    decompose(effective: float, ratio: float = 0.5) -> dict[str, float]
+```
+
+**Example:**
+```python
+from sklearn_meta.meta.correlation import CorrelationAnalyzer
+
+# After running optimization
+analyzer = CorrelationAnalyzer(min_trials=30)
+correlations = analyzer.analyze(optimization_result)
+
+for corr in correlations:
+    print(f"{corr.params}: {corr.correlation_type.value} (strength={corr.strength:.2f})")
+    print(f"  Relationship: {corr.functional_form}")
+
+# Get suggested reparameterizations
+suggestions = analyzer.suggest_reparameterization(correlations)
+print(f"Tradeoffs found: {suggestions['tradeoffs']}")
+```
+
+---
+
 ### Reparameterizations
 
 ```python
-from auto_sklearn.meta.reparameterization import (
+from sklearn_meta.meta.reparameterization import (
     LogProductReparameterization,
     RatioReparameterization,
     LinearReparameterization,
@@ -359,7 +568,7 @@ inverse(params: dict) -> dict   # Transformed → original
 ### Prebaked Configs
 
 ```python
-from auto_sklearn.meta.prebaked import get_prebaked_reparameterizations
+from sklearn_meta.meta.prebaked import get_prebaked_reparameterizations
 
 # Get recommended reparameterizations for a model
 reparams = get_prebaked_reparameterizations(XGBClassifier)
@@ -372,7 +581,7 @@ reparams = get_prebaked_reparameterizations(XGBClassifier)
 ### ShadowFeatureSelector
 
 ```python
-from auto_sklearn.selection.shadow import ShadowFeatureSelector
+from sklearn_meta.selection.shadow import ShadowFeatureSelector
 ```
 
 ```python
@@ -407,7 +616,7 @@ selected_mask_: np.ndarray
 ### ModelPlugin
 
 ```python
-from auto_sklearn.plugins.base import ModelPlugin
+from sklearn_meta.plugins.base import ModelPlugin
 ```
 
 Abstract base class for plugins.
@@ -432,7 +641,7 @@ class ModelPlugin(ABC):
 ### CompositePlugin
 
 ```python
-from auto_sklearn.plugins.base import CompositePlugin
+from sklearn_meta.plugins.base import CompositePlugin
 ```
 
 ```python
@@ -444,7 +653,7 @@ CompositePlugin(plugins: list[ModelPlugin])
 ### PluginRegistry
 
 ```python
-from auto_sklearn.plugins.registry import PluginRegistry, get_global_registry
+from sklearn_meta.plugins.registry import PluginRegistry, get_global_registry
 ```
 
 ```python
@@ -462,8 +671,8 @@ registry = get_global_registry()
 ### XGBoost Plugins
 
 ```python
-from auto_sklearn.plugins.xgboost.multiplier import XGBMultiplierPlugin
-from auto_sklearn.plugins.xgboost.importance import XGBImportancePlugin
+from sklearn_meta.plugins.xgboost.multiplier import XGBMultiplierPlugin
+from sklearn_meta.plugins.xgboost.importance import XGBImportancePlugin
 ```
 
 ```python
@@ -485,7 +694,7 @@ XGBImportancePlugin(
 ### FitCache
 
 ```python
-from auto_sklearn.persistence.cache import FitCache
+from sklearn_meta.persistence.cache import FitCache
 ```
 
 ```python
@@ -508,21 +717,95 @@ clear() -> None
 ### ArtifactStore
 
 ```python
-from auto_sklearn.persistence.store import ArtifactStore
+from sklearn_meta.persistence.store import ArtifactStore, ArtifactMetadata
 ```
 
+File-based storage for models, parameters, and fitted graphs with metadata tracking.
+
 ```python
-ArtifactStore(base_path: str)
+ArtifactStore(base_path: str = ".sklearn_meta_artifacts")
 ```
 
 **Methods:**
 ```python
-save_model(name: str, model) -> str
-load_model(name: str) -> Any
-save_params(name: str, params: dict) -> str
-load_params(name: str) -> dict
-save_cv_result(name: str, result: CVResult) -> str
-load_cv_result(name: str) -> CVResult
+# Save a fitted model
+save_model(
+    model: Any,
+    node_name: str,
+    fold_idx: int = 0,
+    params: dict | None = None,
+    metrics: dict[str, float] | None = None,
+    tags: dict[str, str] | None = None,
+) -> str  # Returns artifact_id
+
+# Load a saved model
+load_model(artifact_id: str) -> Any
+
+# Save all models from a fitted node
+save_fitted_node(
+    fitted_node: FittedNode,
+    tags: dict[str, str] | None = None,
+) -> list[str]  # Returns list of artifact IDs
+
+# Save an entire fitted graph
+save_fitted_graph(
+    fitted_graph: FittedGraph,
+    name: str,
+    tags: dict[str, str] | None = None,
+) -> str  # Returns graph artifact ID
+
+# Save hyperparameters
+save_params(
+    params: dict,
+    node_name: str,
+    description: str = "",
+) -> str
+
+# Load saved parameters
+load_params(artifact_id: str) -> dict
+
+# List stored artifacts
+list_artifacts(
+    artifact_type: str | None = None,  # "model", "params", "graph"
+    node_name: str | None = None,
+) -> list[ArtifactMetadata]
+
+# Delete an artifact
+delete_artifact(artifact_id: str) -> bool
+```
+
+**ArtifactMetadata:**
+```python
+@dataclass
+class ArtifactMetadata:
+    artifact_id: str
+    artifact_type: str
+    created_at: str
+    node_name: str | None
+    params: dict
+    metrics: dict[str, float]
+    tags: dict[str, str]
+```
+
+**Example:**
+```python
+from sklearn_meta.persistence.store import ArtifactStore
+
+# Save a fitted graph
+store = ArtifactStore("./my_artifacts")
+graph_id = store.save_fitted_graph(
+    fitted_graph,
+    name="production_model",
+    tags={"version": "1.0", "dataset": "train_2024"}
+)
+
+# List all model artifacts
+models = store.list_artifacts(artifact_type="model")
+for m in models:
+    print(f"{m.node_name}: {m.metrics}")
+
+# Load a specific model
+model = store.load_model(models[0].artifact_id)
 ```
 
 ---
@@ -532,7 +815,7 @@ load_cv_result(name: str) -> CVResult
 ### AuditLogger
 
 ```python
-from auto_sklearn.audit.logger import AuditLogger
+from sklearn_meta.audit.logger import AuditLogger
 ```
 
 ```python
@@ -552,7 +835,7 @@ get_best_params(node_name: str) -> dict
 ### Log Dataclasses
 
 ```python
-from auto_sklearn.audit.logger import TrialLog, FoldLog
+from sklearn_meta.audit.logger import TrialLog, FoldLog
 
 @dataclass
 class TrialLog:
@@ -578,21 +861,61 @@ class FoldLog:
 ### Executor
 
 ```python
-from auto_sklearn.execution.base import Executor
-from auto_sklearn.execution.local import LocalExecutor, SequentialExecutor
+from sklearn_meta.execution.base import Executor
+from sklearn_meta.execution.local import LocalExecutor, SequentialExecutor
 ```
 
+Abstract base class for execution backends. Executors handle parallel or distributed execution of tasks, allowing easy swapping between local, multiprocessing, or distributed backends.
+
+**Base Executor Interface:**
 ```python
+class Executor(ABC):
+    # Apply function to list of items
+    map(fn: Callable[[T], R], items: list[T]) -> list[R]
+
+    # Submit for async execution
+    submit(fn: Callable[..., R], *args, **kwargs) -> Future[R]
+
+    # Shutdown executor
+    shutdown(wait: bool = True) -> None
+
+    # Properties
+    n_workers: int          # Number of workers available
+    is_distributed() -> bool  # Whether runs on multiple machines
+```
+
+**LocalExecutor:**
+```python
+LocalExecutor(n_jobs: int = -1)  # -1 means use all CPU cores
+```
+
+Parallel execution using Python's concurrent.futures.
+
+**SequentialExecutor:**
+```python
+SequentialExecutor()
+```
+
+Sequential execution for debugging or when parallelism isn't needed.
+
+**Context Manager Support:**
+```python
+with LocalExecutor(n_jobs=4) as executor:
+    results = executor.map(process_item, items)
+# Automatically shuts down on exit
+```
+
+**Example:**
+```python
+from sklearn_meta.execution.local import LocalExecutor, SequentialExecutor
+
 # Parallel execution
-executor = LocalExecutor(n_jobs=-1)
+with LocalExecutor(n_jobs=-1) as executor:
+    results = executor.map(fit_model, model_configs)
 
-# Sequential execution
-executor = SequentialExecutor()
-```
-
-**Methods:**
-```python
-execute(tasks: list[Callable]) -> list[Any]
+# Sequential for debugging
+with SequentialExecutor() as executor:
+    results = executor.map(fit_model, model_configs)
 ```
 
 ---
@@ -600,44 +923,52 @@ execute(tasks: list[Callable]) -> list[Any]
 ## Quick Import Reference
 
 ```python
+# Fluent API (recommended for most use cases)
+from sklearn_meta import GraphBuilder
+
 # Core
-from auto_sklearn.core.data.context import DataContext
-from auto_sklearn.core.data.cv import CVConfig, CVStrategy
-from auto_sklearn.core.data.manager import DataManager
-from auto_sklearn.core.model.node import ModelNode
-from auto_sklearn.core.model.graph import ModelGraph
-from auto_sklearn.core.model.dependency import PredictionDependency, ProbaDependency
-from auto_sklearn.core.tuning.orchestrator import TuningConfig, TuningOrchestrator
-from auto_sklearn.core.tuning.strategy import OptimizationStrategy
+from sklearn_meta import (
+    DataContext,
+    CVConfig,
+    DataManager,
+    ModelNode,
+    ModelGraph,
+    DependencyType,
+    DependencyEdge,
+    TuningOrchestrator,
+    TuningConfig,
+    OptimizationStrategy,
+)
 
 # Search
-from auto_sklearn.search.space import SearchSpace
-from auto_sklearn.search.parameter import FloatParameter, IntParameter, CategoricalParameter
+from sklearn_meta import SearchSpace, OptunaBackend
+from sklearn_meta.search.parameter import FloatParameter, IntParameter, CategoricalParameter
 
-# Meta
-from auto_sklearn.meta.reparameterization import (
+# Meta-learning
+from sklearn_meta import (
+    CorrelationAnalyzer,
+    HyperparameterCorrelation,
+    Reparameterization,
     LogProductReparameterization,
     RatioReparameterization,
     LinearReparameterization,
+    ReparameterizedSpace,
+    get_prebaked_reparameterization,
 )
-from auto_sklearn.meta.prebaked import get_prebaked_reparameterizations
 
 # Selection
-from auto_sklearn.selection.shadow import ShadowFeatureSelector
+from sklearn_meta import FeatureSelector, FeatureSelectionConfig
 
 # Plugins
-from auto_sklearn.plugins.base import ModelPlugin, CompositePlugin
-from auto_sklearn.plugins.registry import PluginRegistry, get_global_registry
-from auto_sklearn.plugins.xgboost.multiplier import XGBMultiplierPlugin
-from auto_sklearn.plugins.xgboost.importance import XGBImportancePlugin
+from sklearn_meta.plugins.base import ModelPlugin, CompositePlugin
+from sklearn_meta.plugins.registry import PluginRegistry, get_global_registry
+from sklearn_meta.plugins.xgboost.multiplier import XGBMultiplierPlugin
+from sklearn_meta.plugins.xgboost.importance import XGBImportancePlugin
 
 # Persistence
-from auto_sklearn.persistence.cache import FitCache
-from auto_sklearn.persistence.store import ArtifactStore
-
-# Audit
-from auto_sklearn.audit.logger import AuditLogger, TrialLog, FoldLog
+from sklearn_meta import FitCache, AuditLogger
+from sklearn_meta.persistence.store import ArtifactStore, ArtifactMetadata
 
 # Execution
-from auto_sklearn.execution.local import LocalExecutor, SequentialExecutor
+from sklearn_meta.execution.local import LocalExecutor, SequentialExecutor
 ```

@@ -31,9 +31,9 @@ graph TB
 Configure the optimization process:
 
 ```python
-from auto_sklearn.core.tuning.orchestrator import TuningConfig
-from auto_sklearn.core.tuning.strategy import OptimizationStrategy
-from auto_sklearn.core.data.cv import CVConfig, CVStrategy
+from sklearn_meta.core.tuning.orchestrator import TuningConfig
+from sklearn_meta.core.tuning.strategy import OptimizationStrategy
+from sklearn_meta.core.data.cv import CVConfig, CVStrategy
 
 tuning_config = TuningConfig(
     # Optimization settings
@@ -75,7 +75,7 @@ tuning_config = TuningConfig(
 State-of-the-art Bayesian optimization with TPE sampler:
 
 ```python
-from auto_sklearn.core.tuning.strategy import OptimizationStrategy
+from sklearn_meta.core.tuning.strategy import OptimizationStrategy
 
 config = TuningConfig(
     strategy=OptimizationStrategy.OPTUNA,
@@ -126,7 +126,7 @@ config = TuningConfig(
 The orchestrator coordinates the entire tuning process:
 
 ```python
-from auto_sklearn.core.tuning.orchestrator import TuningOrchestrator
+from sklearn_meta.core.tuning.orchestrator import TuningOrchestrator
 
 orchestrator = TuningOrchestrator(
     graph=model_graph,
@@ -333,7 +333,7 @@ graph LR
 Cache expensive model fits to avoid redundant computation:
 
 ```python
-from auto_sklearn.persistence.cache import FitCache
+from sklearn_meta.persistence.cache import FitCache
 
 cache = FitCache(
     max_memory_mb=500,
@@ -367,7 +367,7 @@ graph TB
 Track tuning progress and results:
 
 ```python
-from auto_sklearn.audit.logger import AuditLogger
+from sklearn_meta.audit.logger import AuditLogger
 
 logger = AuditLogger(log_dir="./logs")
 
@@ -409,15 +409,15 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.datasets import make_classification
 import pandas as pd
 
-from auto_sklearn.core.data.context import DataContext
-from auto_sklearn.core.data.cv import CVConfig, CVStrategy
-from auto_sklearn.core.data.manager import DataManager
-from auto_sklearn.core.model.node import ModelNode
-from auto_sklearn.core.model.graph import ModelGraph
-from auto_sklearn.core.model.dependency import ProbaDependency
-from auto_sklearn.core.tuning.orchestrator import TuningConfig, TuningOrchestrator
-from auto_sklearn.core.tuning.strategy import OptimizationStrategy
-from auto_sklearn.search.space import SearchSpace
+from sklearn_meta.core.data.context import DataContext
+from sklearn_meta.core.data.cv import CVConfig, CVStrategy
+from sklearn_meta.core.data.manager import DataManager
+from sklearn_meta.core.model.node import ModelNode
+from sklearn_meta.core.model.graph import ModelGraph
+from sklearn_meta.core.model.dependency import ProbaDependency
+from sklearn_meta.core.tuning.orchestrator import TuningConfig, TuningOrchestrator
+from sklearn_meta.core.tuning.strategy import OptimizationStrategy
+from sklearn_meta.search.space import SearchSpace
 
 # === Data ===
 X, y = make_classification(n_samples=2000, n_features=20, random_state=42)

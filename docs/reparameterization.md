@@ -61,7 +61,7 @@ graph TB
 For parameters with inverse relationship (like learning rate × iterations):
 
 ```python
-from auto_sklearn.meta.reparameterization import LogProductReparameterization
+from sklearn_meta.meta.reparameterization import LogProductReparameterization
 
 reparam = LogProductReparameterization(
     name="learning_budget",
@@ -91,7 +91,7 @@ b = exp((log_product - log_ratio) / 2)
 For parameters that should sum to a constant (like regularization weights):
 
 ```python
-from auto_sklearn.meta.reparameterization import RatioReparameterization
+from sklearn_meta.meta.reparameterization import RatioReparameterization
 
 reparam = RatioReparameterization(
     name="regularization",
@@ -121,7 +121,7 @@ b = total × (1 - ratio)
 For weighted combinations of multiple parameters:
 
 ```python
-from auto_sklearn.meta.reparameterization import LinearReparameterization
+from sklearn_meta.meta.reparameterization import LinearReparameterization
 
 reparam = LinearReparameterization(
     name="complexity",
@@ -145,7 +145,7 @@ frac2 = b / total
 ### Basic Usage
 
 ```python
-from auto_sklearn.meta.reparameterization import LogProductReparameterization
+from sklearn_meta.meta.reparameterization import LogProductReparameterization
 
 # Define reparameterization
 reparam = LogProductReparameterization(
@@ -167,8 +167,8 @@ recovered = reparam.inverse(transformed)
 ### With Search Spaces
 
 ```python
-from auto_sklearn.search.space import SearchSpace
-from auto_sklearn.meta.reparameterization import LogProductReparameterization
+from sklearn_meta.search.space import SearchSpace
+from sklearn_meta.meta.reparameterization import LogProductReparameterization
 
 # Original space
 space = SearchSpace()
@@ -188,7 +188,7 @@ space.add_reparameterization(reparam)
 ### With Model Nodes
 
 ```python
-from auto_sklearn.core.model.node import ModelNode
+from sklearn_meta.core.model.node import ModelNode
 
 node = ModelNode(
     name="xgb",
@@ -202,10 +202,10 @@ node = ModelNode(
 
 ## Prebaked Reparameterizations
 
-Auto-sklearn includes ready-to-use reparameterizations for common models:
+sklearn-meta includes ready-to-use reparameterizations for common models:
 
 ```python
-from auto_sklearn.meta.prebaked import get_prebaked_reparameterizations
+from sklearn_meta.meta.prebaked import get_prebaked_reparameterizations
 
 # Get reparameterizations for XGBoost
 reparams = get_prebaked_reparameterizations(XGBClassifier)
@@ -229,7 +229,7 @@ reparams = get_prebaked_reparameterizations(XGBClassifier)
 ### Auto-Apply
 
 ```python
-from auto_sklearn.core.model.node import ModelNode
+from sklearn_meta.core.model.node import ModelNode
 
 node = ModelNode(
     name="xgb",
@@ -378,14 +378,14 @@ from sklearn.datasets import make_classification
 import pandas as pd
 import xgboost as xgb
 
-from auto_sklearn.core.data.context import DataContext
-from auto_sklearn.core.data.cv import CVConfig, CVStrategy
-from auto_sklearn.core.data.manager import DataManager
-from auto_sklearn.core.model.node import ModelNode
-from auto_sklearn.core.model.graph import ModelGraph
-from auto_sklearn.core.tuning.orchestrator import TuningConfig, TuningOrchestrator
-from auto_sklearn.search.space import SearchSpace
-from auto_sklearn.meta.reparameterization import LogProductReparameterization
+from sklearn_meta.core.data.context import DataContext
+from sklearn_meta.core.data.cv import CVConfig, CVStrategy
+from sklearn_meta.core.data.manager import DataManager
+from sklearn_meta.core.model.node import ModelNode
+from sklearn_meta.core.model.graph import ModelGraph
+from sklearn_meta.core.tuning.orchestrator import TuningConfig, TuningOrchestrator
+from sklearn_meta.search.space import SearchSpace
+from sklearn_meta.meta.reparameterization import LogProductReparameterization
 
 # Data
 X, y = make_classification(n_samples=1000, n_features=20, random_state=42)

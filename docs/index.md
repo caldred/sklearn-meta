@@ -1,4 +1,4 @@
-# Auto-sklearn Documentation
+# sklearn-meta Documentation
 
 > A Python library for automated machine learning with meta-learning capabilities, hyperparameter optimization, and model stacking.
 
@@ -6,11 +6,11 @@
 
 ## Overview
 
-Auto-sklearn provides a powerful framework for building automated machine learning pipelines. It combines hyperparameter optimization with advanced techniques like reparameterization, feature selection, and model stacking to achieve state-of-the-art results with minimal configuration.
+sklearn-meta provides a powerful framework for building automated machine learning pipelines. It combines hyperparameter optimization with advanced techniques like reparameterization, feature selection, and model stacking to achieve state-of-the-art results with minimal configuration.
 
 ```mermaid
 graph TB
-    subgraph "Auto-sklearn Pipeline"
+    subgraph "sklearn-meta Pipeline"
         A[Raw Data] --> B[DataContext]
         B --> C[Feature Selection]
         C --> D[Model Graph]
@@ -62,6 +62,9 @@ graph TB
 - [Feature Selection](feature-selection.md) — Automated feature selection
 - [Plugins](plugins.md) — Extending functionality with plugins
 
+### Specialized Topics
+- [Joint Quantile Regression](joint-quantile-regression.md) — Multivariate target modeling with uncertainty
+
 ### Reference
 - [API Reference](api-reference.md) — Complete API documentation
 
@@ -105,12 +108,12 @@ graph LR
 
 ```python
 from sklearn.ensemble import RandomForestClassifier
-from auto_sklearn.core.data.context import DataContext
-from auto_sklearn.core.data.cv import CVConfig, CVStrategy
-from auto_sklearn.core.model.node import ModelNode
-from auto_sklearn.core.model.graph import ModelGraph
-from auto_sklearn.core.tuning.orchestrator import TuningConfig, TuningOrchestrator
-from auto_sklearn.search.space import SearchSpace
+from sklearn_meta.core.data.context import DataContext
+from sklearn_meta.core.data.cv import CVConfig, CVStrategy
+from sklearn_meta.core.model.node import ModelNode
+from sklearn_meta.core.model.graph import ModelGraph
+from sklearn_meta.core.tuning.orchestrator import TuningConfig, TuningOrchestrator
+from sklearn_meta.search.space import SearchSpace
 
 # Define search space
 space = SearchSpace()

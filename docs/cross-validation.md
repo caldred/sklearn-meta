@@ -1,6 +1,6 @@
 # Cross-Validation
 
-Cross-validation is essential for reliable model evaluation and preventing overfitting. Auto-sklearn provides flexible CV strategies that integrate seamlessly with hyperparameter tuning and model stacking.
+Cross-validation is essential for reliable model evaluation and preventing overfitting. sklearn-meta provides flexible CV strategies that integrate seamlessly with hyperparameter tuning and model stacking.
 
 ---
 
@@ -21,7 +21,7 @@ graph TB
 Preserves class distribution in each fold. **Recommended for classification.**
 
 ```python
-from auto_sklearn.core.data.cv import CVConfig, CVStrategy
+from sklearn_meta.core.data.cv import CVConfig, CVStrategy
 
 cv_config = CVConfig(
     n_splits=5,
@@ -186,7 +186,7 @@ With nested CV:
 ### Configuration
 
 ```python
-from auto_sklearn.core.data.cv import CVConfig, CVStrategy, NestedCVConfig
+from sklearn_meta.core.data.cv import CVConfig, CVStrategy, NestedCVConfig
 
 # Inner CV for hyperparameter tuning
 inner_cv = CVConfig(
@@ -254,7 +254,7 @@ graph.add_dependency("base", "meta", PredictionDependency())
 ### Accessing OOF Predictions
 
 ```python
-from auto_sklearn.core.data.manager import DataManager
+from sklearn_meta.core.data.manager import DataManager
 
 data_manager = DataManager(cv_config)
 folds = data_manager.create_folds(ctx)
@@ -273,7 +273,7 @@ oof_predictions = data_manager.route_oof_predictions(
 The `DataManager` coordinates CV operations:
 
 ```python
-from auto_sklearn.core.data.manager import DataManager
+from sklearn_meta.core.data.manager import DataManager
 
 data_manager = DataManager(cv_config)
 
@@ -304,7 +304,7 @@ val_ctx = data_manager.align_to_fold(ctx, fold, split="val")
 
 ## Data Leakage Prevention
 
-Auto-sklearn prevents common data leakage scenarios:
+sklearn-meta prevents common data leakage scenarios:
 
 ### 1. OOF Predictions
 
@@ -404,13 +404,13 @@ from sklearn.datasets import make_classification
 from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
 
-from auto_sklearn.core.data.context import DataContext
-from auto_sklearn.core.data.cv import CVConfig, CVStrategy
-from auto_sklearn.core.data.manager import DataManager
-from auto_sklearn.core.model.node import ModelNode
-from auto_sklearn.core.model.graph import ModelGraph
-from auto_sklearn.core.tuning.orchestrator import TuningConfig, TuningOrchestrator
-from auto_sklearn.search.space import SearchSpace
+from sklearn_meta.core.data.context import DataContext
+from sklearn_meta.core.data.cv import CVConfig, CVStrategy
+from sklearn_meta.core.data.manager import DataManager
+from sklearn_meta.core.model.node import ModelNode
+from sklearn_meta.core.model.graph import ModelGraph
+from sklearn_meta.core.tuning.orchestrator import TuningConfig, TuningOrchestrator
+from sklearn_meta.search.space import SearchSpace
 
 # Generate data
 X, y = make_classification(n_samples=1000, n_features=20, random_state=42)

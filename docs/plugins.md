@@ -1,6 +1,6 @@
 # Plugins
 
-The plugin system extends auto-sklearn with model-specific behavior, custom parameter transformations, and specialized fitting logic. Plugins hook into the model lifecycle without modifying core code.
+The plugin system extends sklearn-meta with model-specific behavior, custom parameter transformations, and specialized fitting logic. Plugins hook into the model lifecycle without modifying core code.
 
 ---
 
@@ -26,7 +26,7 @@ graph TB
 ### Basic Plugin
 
 ```python
-from auto_sklearn.plugins.base import ModelPlugin
+from sklearn_meta.plugins.base import ModelPlugin
 
 class MyPlugin(ModelPlugin):
     """Custom plugin for specific model behavior."""
@@ -67,7 +67,7 @@ class MyPlugin(ModelPlugin):
 Optimizes learning rate / n_estimators trade-off after tuning:
 
 ```python
-from auto_sklearn.plugins.xgboost.multiplier import XGBMultiplierPlugin
+from sklearn_meta.plugins.xgboost.multiplier import XGBMultiplierPlugin
 
 plugin = XGBMultiplierPlugin(
     multipliers=[0.5, 1.0, 2.0],  # Test these multipliers
@@ -101,7 +101,7 @@ graph LR
 Extracts feature importance from XGBoost models:
 
 ```python
-from auto_sklearn.plugins.xgboost.importance import XGBImportancePlugin
+from sklearn_meta.plugins.xgboost.importance import XGBImportancePlugin
 
 plugin = XGBImportancePlugin(importance_type="gain")
 
@@ -122,7 +122,7 @@ importance = plugin.get_importance(model)
 ### Registering Plugins
 
 ```python
-from auto_sklearn.plugins.registry import PluginRegistry
+from sklearn_meta.plugins.registry import PluginRegistry
 
 registry = PluginRegistry()
 
@@ -149,7 +149,7 @@ for plugin in plugins:
 ### Global Registry
 
 ```python
-from auto_sklearn.plugins.registry import get_global_registry
+from sklearn_meta.plugins.registry import get_global_registry
 
 registry = get_global_registry()
 registry.register(MyPlugin())
@@ -162,7 +162,7 @@ registry.register(MyPlugin())
 Combine multiple plugins:
 
 ```python
-from auto_sklearn.plugins.base import CompositePlugin
+from sklearn_meta.plugins.base import CompositePlugin
 
 composite = CompositePlugin([
     XGBMultiplierPlugin(),
@@ -179,7 +179,7 @@ composite.modify_params(params, context)
 ## Example: Custom Early Stopping Plugin
 
 ```python
-from auto_sklearn.plugins.base import ModelPlugin
+from sklearn_meta.plugins.base import ModelPlugin
 import numpy as np
 
 class EarlyStoppingPlugin(ModelPlugin):
@@ -319,7 +319,7 @@ class LoggingPlugin(ModelPlugin):
 ### Attach to Specific Node
 
 ```python
-from auto_sklearn.core.model.node import ModelNode
+from sklearn_meta.core.model.node import ModelNode
 
 node = ModelNode(
     name="xgb",
@@ -332,7 +332,7 @@ node = ModelNode(
 ### Global Plugin Application
 
 ```python
-from auto_sklearn.plugins.registry import get_global_registry
+from sklearn_meta.plugins.registry import get_global_registry
 
 # Register globally
 registry = get_global_registry()
@@ -365,14 +365,14 @@ from sklearn.datasets import make_classification
 import pandas as pd
 import xgboost as xgb
 
-from auto_sklearn.core.data.context import DataContext
-from auto_sklearn.core.data.cv import CVConfig, CVStrategy
-from auto_sklearn.core.data.manager import DataManager
-from auto_sklearn.core.model.node import ModelNode
-from auto_sklearn.core.model.graph import ModelGraph
-from auto_sklearn.core.tuning.orchestrator import TuningConfig, TuningOrchestrator
-from auto_sklearn.search.space import SearchSpace
-from auto_sklearn.plugins.xgboost.multiplier import XGBMultiplierPlugin
+from sklearn_meta.core.data.context import DataContext
+from sklearn_meta.core.data.cv import CVConfig, CVStrategy
+from sklearn_meta.core.data.manager import DataManager
+from sklearn_meta.core.model.node import ModelNode
+from sklearn_meta.core.model.graph import ModelGraph
+from sklearn_meta.core.tuning.orchestrator import TuningConfig, TuningOrchestrator
+from sklearn_meta.search.space import SearchSpace
+from sklearn_meta.plugins.xgboost.multiplier import XGBMultiplierPlugin
 
 # Data
 X, y = make_classification(n_samples=1000, n_features=20, random_state=42)

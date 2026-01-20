@@ -1,6 +1,6 @@
 # Feature Selection
 
-Auto-sklearn provides automated feature selection using shadow features and entropy matching. This statistically robust approach identifies genuinely important features while controlling for random chance.
+sklearn-meta provides automated feature selection using shadow features and entropy matching. This statistically robust approach identifies genuinely important features while controlling for random chance.
 
 ---
 
@@ -129,7 +129,7 @@ for feature, shadow in zip(originals, shadows):
 ### Basic Usage
 
 ```python
-from auto_sklearn.selection.shadow import ShadowFeatureSelector
+from sklearn_meta.selection.shadow import ShadowFeatureSelector
 
 selector = ShadowFeatureSelector(
     estimator=RandomForestClassifier(n_estimators=100, random_state=42),
@@ -180,9 +180,9 @@ selector = ShadowFeatureSelector(
 ### In Model Graph
 
 ```python
-from auto_sklearn.selection.shadow import ShadowFeatureSelector
-from auto_sklearn.core.model.node import ModelNode
-from auto_sklearn.core.model.dependency import TransformDependency
+from sklearn_meta.selection.shadow import ShadowFeatureSelector
+from sklearn_meta.core.model.node import ModelNode
+from sklearn_meta.core.model.dependency import TransformDependency
 
 # Feature selector node
 selector = ShadowFeatureSelector(RandomForestClassifier(n_estimators=50))
@@ -333,7 +333,7 @@ from sklearn.metrics import accuracy_score
 import pandas as pd
 import numpy as np
 
-from auto_sklearn.selection.shadow import ShadowFeatureSelector
+from sklearn_meta.selection.shadow import ShadowFeatureSelector
 
 # Generate data with known informative/noise structure
 X, y = make_classification(

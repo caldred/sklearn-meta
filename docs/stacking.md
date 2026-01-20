@@ -1,6 +1,6 @@
 # Model Stacking
 
-Stacking (stacked generalization) combines multiple models by training a meta-learner on their predictions. Auto-sklearn provides robust stacking with automatic out-of-fold prediction handling to prevent data leakage.
+Stacking (stacked generalization) combines multiple models by training a meta-learner on their predictions. sklearn-meta provides robust stacking with automatic out-of-fold prediction handling to prevent data leakage.
 
 ---
 
@@ -82,8 +82,8 @@ Each sample's prediction comes from a model that **never saw that sample**.
 ```python
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.svm import SVC
-from auto_sklearn.core.model.node import ModelNode
-from auto_sklearn.search.space import SearchSpace
+from sklearn_meta.core.model.node import ModelNode
+from sklearn_meta.search.space import SearchSpace
 
 # Random Forest
 rf_space = SearchSpace().add_int("n_estimators", 50, 200).add_int("max_depth", 3, 15)
@@ -110,8 +110,8 @@ meta_node = ModelNode("meta", LogisticRegression, meta_space, {"random_state": 4
 ### Step 3: Create Graph with Dependencies
 
 ```python
-from auto_sklearn.core.model.graph import ModelGraph
-from auto_sklearn.core.model.dependency import ProbaDependency
+from sklearn_meta.core.model.graph import ModelGraph
+from sklearn_meta.core.model.dependency import ProbaDependency
 
 graph = ModelGraph()
 
@@ -130,10 +130,10 @@ graph.add_dependency("svm", "meta", ProbaDependency())
 ### Step 4: Tune and Fit
 
 ```python
-from auto_sklearn.core.data.context import DataContext
-from auto_sklearn.core.data.cv import CVConfig, CVStrategy
-from auto_sklearn.core.data.manager import DataManager
-from auto_sklearn.core.tuning.orchestrator import TuningConfig, TuningOrchestrator
+from sklearn_meta.core.data.context import DataContext
+from sklearn_meta.core.data.cv import CVConfig, CVStrategy
+from sklearn_meta.core.data.manager import DataManager
+from sklearn_meta.core.tuning.orchestrator import TuningConfig, TuningOrchestrator
 
 ctx = DataContext(X=X_train, y=y_train)
 cv_config = CVConfig(n_splits=5, strategy=CVStrategy.STRATIFIED)
@@ -159,7 +159,7 @@ probabilities = fitted_graph.predict_proba(X_test)
 Pass class predictions (0, 1, 2, ...) or regression values:
 
 ```python
-from auto_sklearn.core.model.dependency import PredictionDependency
+from sklearn_meta.core.model.dependency import PredictionDependency
 
 graph.add_dependency("base", "meta", PredictionDependency())
 ```
@@ -171,7 +171,7 @@ graph.add_dependency("base", "meta", PredictionDependency())
 Pass probability predictions:
 
 ```python
-from auto_sklearn.core.model.dependency import ProbaDependency
+from sklearn_meta.core.model.dependency import ProbaDependency
 
 graph.add_dependency("base", "meta", ProbaDependency())
 ```
@@ -188,7 +188,7 @@ graph.add_dependency("base", "meta", ProbaDependency())
 Pass transformed features (for preprocessing nodes):
 
 ```python
-from auto_sklearn.core.model.dependency import TransformDependency
+from sklearn_meta.core.model.dependency import TransformDependency
 
 graph.add_dependency("scaler", "classifier", TransformDependency())
 ```
@@ -386,14 +386,14 @@ from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, roc_auc_score
 import pandas as pd
 
-from auto_sklearn.core.data.context import DataContext
-from auto_sklearn.core.data.cv import CVConfig, CVStrategy
-from auto_sklearn.core.data.manager import DataManager
-from auto_sklearn.core.model.node import ModelNode
-from auto_sklearn.core.model.graph import ModelGraph
-from auto_sklearn.core.model.dependency import ProbaDependency
-from auto_sklearn.core.tuning.orchestrator import TuningConfig, TuningOrchestrator
-from auto_sklearn.search.space import SearchSpace
+from sklearn_meta.core.data.context import DataContext
+from sklearn_meta.core.data.cv import CVConfig, CVStrategy
+from sklearn_meta.core.data.manager import DataManager
+from sklearn_meta.core.model.node import ModelNode
+from sklearn_meta.core.model.graph import ModelGraph
+from sklearn_meta.core.model.dependency import ProbaDependency
+from sklearn_meta.core.tuning.orchestrator import TuningConfig, TuningOrchestrator
+from sklearn_meta.search.space import SearchSpace
 
 # === Data ===
 X, y = make_classification(

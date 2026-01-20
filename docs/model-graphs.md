@@ -11,8 +11,8 @@ Model graphs allow you to define complex machine learning pipelines as directed 
 A `ModelNode` represents a single model in your pipeline:
 
 ```python
-from auto_sklearn.core.model.node import ModelNode
-from auto_sklearn.search.space import SearchSpace
+from sklearn_meta.core.model.node import ModelNode
+from sklearn_meta.search.space import SearchSpace
 from sklearn.ensemble import RandomForestClassifier
 
 space = SearchSpace()
@@ -31,7 +31,7 @@ node = ModelNode(
 A `ModelGraph` contains nodes and their dependencies:
 
 ```python
-from auto_sklearn.core.model.graph import ModelGraph
+from sklearn_meta.core.model.graph import ModelGraph
 
 graph = ModelGraph()
 graph.add_node(rf_node)
@@ -43,7 +43,7 @@ graph.add_node(xgb_node)
 Dependencies define how nodes connect:
 
 ```python
-from auto_sklearn.core.model.dependency import PredictionDependency
+from sklearn_meta.core.model.dependency import PredictionDependency
 
 # Meta-learner uses predictions from base models
 graph.add_dependency(
@@ -116,7 +116,7 @@ graph TB
 ```
 
 ```python
-from auto_sklearn.core.model.dependency import PredictionDependency
+from sklearn_meta.core.model.dependency import PredictionDependency
 
 # Base models
 graph.add_node(rf_node)
@@ -169,7 +169,7 @@ graph TB
 Passes class predictions (or regression values) to downstream nodes:
 
 ```python
-from auto_sklearn.core.model.dependency import PredictionDependency
+from sklearn_meta.core.model.dependency import PredictionDependency
 
 graph.add_dependency("base", "meta", PredictionDependency())
 ```
@@ -181,7 +181,7 @@ graph.add_dependency("base", "meta", PredictionDependency())
 Passes probability predictions to downstream nodes:
 
 ```python
-from auto_sklearn.core.model.dependency import ProbaDependency
+from sklearn_meta.core.model.dependency import ProbaDependency
 
 graph.add_dependency("base", "meta", ProbaDependency())
 ```
@@ -193,7 +193,7 @@ graph.add_dependency("base", "meta", ProbaDependency())
 Passes transformed features (e.g., from a transformer):
 
 ```python
-from auto_sklearn.core.model.dependency import TransformDependency
+from sklearn_meta.core.model.dependency import TransformDependency
 
 graph.add_dependency("pca", "classifier", TransformDependency())
 ```
@@ -257,10 +257,10 @@ from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 
-from auto_sklearn.core.model.node import ModelNode
-from auto_sklearn.core.model.graph import ModelGraph
-from auto_sklearn.core.model.dependency import PredictionDependency, ProbaDependency
-from auto_sklearn.search.space import SearchSpace
+from sklearn_meta.core.model.node import ModelNode
+from sklearn_meta.core.model.graph import ModelGraph
+from sklearn_meta.core.model.dependency import PredictionDependency, ProbaDependency
+from sklearn_meta.search.space import SearchSpace
 
 # === Base Model 1: Random Forest ===
 rf_space = SearchSpace()

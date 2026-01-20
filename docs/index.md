@@ -39,6 +39,7 @@ graph TB
 | **Cross-Validation** | Stratified, grouped, nested, and time-series strategies |
 | **Feature Selection** | Shadow feature-based selection with entropy matching |
 | **Model Stacking** | Multi-layer stacking with out-of-fold predictions |
+| **Joint Quantile Regression** | Model correlated targets with uncertainty quantification |
 | **Plugin System** | Extensible plugins for model-specific behavior |
 | **Caching** | Hash-based caching for expensive operations |
 

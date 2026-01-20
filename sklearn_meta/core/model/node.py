@@ -137,6 +137,9 @@ class ModelNode:
             return model.predict_proba(X)
         elif self.output_type == OutputType.TRANSFORM:
             return model.transform(X)
+        elif self.output_type == OutputType.QUANTILES:
+            # Quantile models use predict() - the quantile level is set at fit time
+            return model.predict(X)
         else:
             raise ValueError(f"Unknown output type: {self.output_type}")
 

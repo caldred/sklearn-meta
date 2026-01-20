@@ -126,11 +126,16 @@ class QuantileModelNode(ModelNode):
         if not self.name:
             self.name = f"quantile_{self.property_name}"
 
-        # Call parent validation (skipping estimator_class check for now)
+        # Validate estimator has required methods
         if self.estimator_class:
             if not hasattr(self.estimator_class, "fit"):
                 raise ValueError(
                     f"Estimator {self.estimator_class} must have a 'fit' method"
+                )
+            if not hasattr(self.estimator_class, "predict"):
+                raise ValueError(
+                    f"Estimator {self.estimator_class} must have a 'predict' method "
+                    "for quantile regression"
                 )
 
     def create_estimator_for_quantile(

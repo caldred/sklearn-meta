@@ -15,6 +15,8 @@ from sklearn.model_selection import (
     TimeSeriesSplit,
 )
 
+import logging
+
 from sklearn_meta.core.data.context import DataContext
 from sklearn_meta.core.data.cv import (
     CVConfig,
@@ -24,6 +26,8 @@ from sklearn_meta.core.data.cv import (
     FoldResult,
     NestedCVFold,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class DataManager:
@@ -64,13 +68,20 @@ class DataManager:
                 f"Reduce n_splits or use more data."
             )
 
-        splitter = self._create_splitter(ctx)
+        # Determine effective strategy - fall back from GROUP to KFOLD if no groups
+        effective_strategy = self.cv_config.strategy
+        if effective_strategy == CVStrategy.GROUP and ctx.groups is None:
+            logger.warning(
+                "CVConfig strategy is GROUP but no groups provided. "
+                "Falling back to KFOLD. Provide groups for group-based CV."
+            )
+            effective_strategy = CVStrategy.RANDOM
+
+        splitter = self._create_splitter(ctx, effective_strategy)
         folds = []
 
         # Get split iterator
-        if self.cv_config.strategy == CVStrategy.GROUP:
-            if ctx.groups is None:
-                raise ValueError("Group CV requires groups in DataContext")
+        if effective_strategy == CVStrategy.GROUP:
             split_iter = splitter.split(ctx.X, ctx.y, groups=ctx.groups)
         else:
             split_iter = splitter.split(ctx.X, ctx.y)
@@ -211,9 +222,12 @@ class DataManager:
             node_name=node_name,
         )
 
-    def _create_splitter(self, ctx: DataContext):
+    def _create_splitter(
+        self, ctx: DataContext, strategy: Optional[CVStrategy] = None
+    ):
         """Create the appropriate sklearn splitter."""
-        strategy = self.cv_config.strategy
+        if strategy is None:
+            strategy = self.cv_config.strategy
         n_splits = self.cv_config.n_splits
         n_repeats = self.cv_config.n_repeats
         random_state = self.cv_config.random_state
@@ -237,16 +251,19 @@ class DataManager:
             )
 
         elif strategy == CVStrategy.RANDOM:
+            shuffle = self.cv_config.shuffle
+            # sklearn raises error if random_state is set but shuffle is False
+            rs = random_state if shuffle else None
             if n_repeats > 1:
                 return RepeatedKFold(
                     n_splits=n_splits,
                     n_repeats=n_repeats,
-                    random_state=random_state,
+                    random_state=rs,
                 )
             return KFold(
                 n_splits=n_splits,
-                shuffle=self.cv_config.shuffle,
-                random_state=random_state,
+                shuffle=shuffle,
+                random_state=rs,
             )
 
         elif strategy == CVStrategy.TIME_SERIES:

@@ -161,13 +161,26 @@ class FittedGraph:
         for edge in upstream_edges:
             upstream_preds = self._predict_node(X, edge.source, cache)
 
-            if edge.dep_type == DependencyType.PREDICTION:
+            # Handle all dependency types that inject features
+            if edge.dep_type in (
+                DependencyType.PREDICTION,
+                DependencyType.PROBA,
+                DependencyType.FEATURE,
+            ):
                 col_name = edge.feature_name
                 if upstream_preds.ndim == 1:
                     X_augmented[col_name] = upstream_preds
                 else:
                     for i in range(upstream_preds.shape[1]):
                         X_augmented[f"{col_name}_{i}"] = upstream_preds[:, i]
+            elif edge.dep_type == DependencyType.TRANSFORM:
+                # TRANSFORM replaces features entirely
+                X_augmented = upstream_preds
+            elif edge.dep_type == DependencyType.BASE_MARGIN:
+                # BASE_MARGIN is handled via fit_params at training time;
+                # at inference we still need the predictions available but
+                # XGBoost doesn't use base_margin for predict() - it's baked in
+                pass
 
         # Ensemble predictions from all fold models
         predictions = []
@@ -609,25 +622,38 @@ class TuningOrchestrator:
         from sklearn.metrics import get_scorer
 
         metric = self.tuning_config.metric
+        scorer = get_scorer(metric)
 
-        # Handle common metrics
-        if metric == "neg_mean_squared_error":
-            from sklearn.metrics import mean_squared_error
-            return -mean_squared_error(y_true, y_pred)
-        elif metric == "accuracy":
-            from sklearn.metrics import accuracy_score
-            if y_pred.ndim > 1:
-                y_pred = np.argmax(y_pred, axis=1)
-            return accuracy_score(y_true, y_pred)
-        elif metric == "roc_auc":
-            from sklearn.metrics import roc_auc_score
-            if y_pred.ndim > 1:
-                return roc_auc_score(y_true, y_pred[:, 1])
-            return roc_auc_score(y_true, y_pred)
-        else:
-            # Try sklearn scorer
-            scorer = get_scorer(metric)
-            return scorer._score_func(y_true, y_pred)
+        # Create a dummy estimator wrapper for the scorer
+        # The scorer expects (estimator, X, y) but we already have predictions
+        class _PredictionWrapper:
+            """Wrapper that returns pre-computed predictions."""
+
+            def __init__(self, predictions):
+                self._predictions = predictions
+
+            def predict(self, X):
+                # For classification with probability outputs, convert to class labels
+                preds = self._predictions
+                if preds.ndim > 1:
+                    return np.argmax(preds, axis=1)
+                return preds
+
+            def predict_proba(self, X):
+                return self._predictions
+
+            def decision_function(self, X):
+                # For binary classification probas, return positive class probability
+                preds = self._predictions
+                if preds.ndim > 1 and preds.shape[1] == 2:
+                    return preds[:, 1]
+                return preds
+
+        wrapper = _PredictionWrapper(y_pred)
+
+        # Use scorer properly - this respects _sign, _kwargs, and response_method
+        # We pass y_true as X since the wrapper ignores it
+        return scorer(wrapper, y_true, y_true)
 
     def _prepare_context_with_oof(
         self,

@@ -48,3 +48,6 @@ Thumbs.db
 
 # Artifacts
 .auto_sklearn_artifacts/
+
+# Claude
+.claude/

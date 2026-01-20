@@ -135,12 +135,19 @@ class TestDataManagerGroupCV:
             intersection = train_groups & val_groups
             assert len(intersection) == 0, f"Fold {fold.fold_idx} has group leak: {intersection}"
 
-    def test_group_cv_requires_groups(self, data_context, cv_config_group):
-        """Verify group CV raises error without groups."""
+    def test_group_cv_falls_back_without_groups(self, data_context, cv_config_group, caplog):
+        """Verify group CV falls back to KFOLD without groups."""
+        import logging
+
         manager = DataManager(cv_config_group)
 
-        with pytest.raises(ValueError, match="requires groups"):
-            manager.create_folds(data_context)
+        with caplog.at_level(logging.WARNING):
+            folds = manager.create_folds(data_context)
+
+        # Should have logged a warning about fallback
+        assert "Falling back to KFOLD" in caplog.text
+        # Should still create valid folds
+        assert len(folds) == cv_config_group.n_splits
 
 
 class TestDataManagerRepeatedCV:

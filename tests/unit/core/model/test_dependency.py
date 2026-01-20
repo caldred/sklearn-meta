@@ -16,9 +16,10 @@ class TestDependencyType:
             DependencyType.FEATURE,
             DependencyType.PROBA,
             DependencyType.BASE_MARGIN,
+            DependencyType.CONDITIONAL_SAMPLE,
         ]
 
-        assert len(DependencyType) == 5
+        assert len(DependencyType) == 6
         for dep_type in expected_types:
             assert dep_type in DependencyType
 
@@ -29,6 +30,7 @@ class TestDependencyType:
         assert DependencyType.FEATURE.value == "feature"
         assert DependencyType.PROBA.value == "proba"
         assert DependencyType.BASE_MARGIN.value == "base_margin"
+        assert DependencyType.CONDITIONAL_SAMPLE.value == "conditional_sample"
 
 
 class TestDependencyEdgeCreation:

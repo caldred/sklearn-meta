@@ -204,7 +204,7 @@ class TestFitCacheIntegration:
     def test_fit_cache_caches_models(self, classification_data, tmp_path):
         """Verify FitCache actually caches fitted models."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         cache = FitCache(cache_dir=str(tmp_path / "cache"))
 
@@ -236,7 +236,7 @@ class TestFitCacheIntegration:
     def test_fit_cache_stats(self, classification_data, tmp_path):
         """Verify FitCache statistics work."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         cache = FitCache(cache_dir=str(tmp_path / "cache"))
 
@@ -260,7 +260,7 @@ class TestFitCacheIntegration:
     def test_orchestrator_with_cache(self, classification_data, mock_search_backend, tmp_path):
         """Verify TuningOrchestrator uses cache correctly."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         cache = FitCache(cache_dir=str(tmp_path / "cache"))
 

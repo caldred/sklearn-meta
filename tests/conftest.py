@@ -146,7 +146,7 @@ def data_context(classification_data):
     from sklearn_meta.core.data.context import DataContext
 
     X, y = classification_data
-    return DataContext(X=X, y=y)
+    return DataContext.from_Xy(X, y)
 
 
 @pytest.fixture
@@ -155,7 +155,7 @@ def data_context_with_groups(grouped_data):
     from sklearn_meta.core.data.context import DataContext
 
     X, y, groups = grouped_data
-    return DataContext(X=X, y=y, groups=groups)
+    return DataContext.from_Xy(X, y, groups=groups)
 
 
 @pytest.fixture
@@ -164,7 +164,7 @@ def regression_context(regression_data):
     from sklearn_meta.core.data.context import DataContext
 
     X, y = regression_data
-    return DataContext(X=X, y=y)
+    return DataContext.from_Xy(X, y)
 
 
 @pytest.fixture
@@ -173,7 +173,7 @@ def small_context(small_classification_data):
     from sklearn_meta.core.data.context import DataContext
 
     X, y = small_classification_data
-    return DataContext(X=X, y=y)
+    return DataContext.from_Xy(X, y)
 
 
 # =============================================================================

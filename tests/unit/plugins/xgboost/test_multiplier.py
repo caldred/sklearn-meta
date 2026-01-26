@@ -315,7 +315,7 @@ class TestXGBMultiplierPluginEvaluateParams:
         from sklearn_meta.core.data.context import DataContext
 
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         plugin = XGBMultiplierPlugin(cv_folds=2)
 

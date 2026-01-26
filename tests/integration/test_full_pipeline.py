@@ -52,7 +52,7 @@ class TestSimplePipeline:
     def test_simple_rf_pipeline(self, classification_pipeline_data, mock_search_backend):
         """Verify single RF model tunes and predicts correctly."""
         X, y = classification_pipeline_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         # Create simple graph
         space = SearchSpace()
@@ -102,7 +102,7 @@ class TestSimplePipeline:
     def test_lr_pipeline_classification(self, classification_pipeline_data, mock_search_backend):
         """Verify Logistic Regression pipeline works."""
         X, y = classification_pipeline_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         space = SearchSpace()
         space.add_float("C", 0.1, 10.0, log=True)
@@ -146,7 +146,7 @@ class TestTwoModelEnsemble:
     def test_two_model_ensemble_fits(self, classification_pipeline_data, mock_search_backend):
         """Verify two independent models can be fitted."""
         X, y = classification_pipeline_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         # Create two independent nodes
         rf_space = SearchSpace().add_int("n_estimators", 5, 20)
@@ -202,7 +202,7 @@ class TestStackingPipeline:
     def test_stacking_fits_layers(self, classification_pipeline_data, mock_search_backend):
         """Verify stacking fits base and meta layers correctly."""
         X, y = classification_pipeline_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         # Base models
         rf_node = ModelNode(
@@ -262,7 +262,7 @@ class TestStackingPipeline:
     def test_stacking_oof_not_from_train(self, classification_pipeline_data, mock_search_backend):
         """Verify OOF predictions are from validation, not training."""
         X, y = classification_pipeline_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         rf_node = ModelNode(
             name="rf_base",
@@ -317,7 +317,7 @@ class TestRegressionPipeline:
     def test_rf_regression_pipeline(self, regression_pipeline_data, mock_search_backend):
         """Verify RF regression pipeline works."""
         X, y = regression_pipeline_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         space = SearchSpace()
         space.add_int("n_estimators", 10, 50)
@@ -366,7 +366,7 @@ class TestNoTuningPipeline:
     def test_no_tuning_uses_fixed_params(self, classification_pipeline_data, mock_search_backend):
         """Verify no tuning strategy uses fixed params only."""
         X, y = classification_pipeline_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         node = ModelNode(
             name="rf",
@@ -407,7 +407,7 @@ class TestGreedyOptimization:
     def test_greedy_fits_nodes_sequentially(self, classification_pipeline_data, mock_search_backend):
         """Verify greedy strategy fits nodes one by one."""
         X, y = classification_pipeline_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         rf_node = ModelNode(
             name="rf",
@@ -454,7 +454,7 @@ class TestFittedGraphPrediction:
     def test_predict_uses_ensemble(self, classification_pipeline_data, mock_search_backend):
         """Verify prediction uses ensemble of CV models."""
         X, y = classification_pipeline_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         node = ModelNode(
             name="rf",

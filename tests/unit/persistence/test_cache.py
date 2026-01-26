@@ -180,10 +180,10 @@ class TestFitCacheCacheKey:
         params = {"n_estimators": 100}
 
         X1, y1 = classification_data
-        ctx1 = DataContext(X=X1, y=y1)
+        ctx1 = DataContext.from_Xy(X1, y1)
 
         X2 = X1 * 2  # Different data
-        ctx2 = DataContext(X=X2, y=y1)
+        ctx2 = DataContext.from_Xy(X2, y1)
 
         key1 = cache.cache_key(node, params, ctx1)
         key2 = cache.cache_key(node, params, ctx2)
@@ -219,8 +219,8 @@ class TestFitCacheDataHash:
         cache = FitCache()
         X, y = classification_data
 
-        ctx1 = DataContext(X=X, y=y)
-        ctx2 = DataContext(X=X.iloc[:100], y=y.iloc[:100])
+        ctx1 = DataContext.from_Xy(X, y)
+        ctx2 = DataContext.from_Xy(X.iloc[:100], y.iloc[:100])
 
         hash1 = cache._data_hash(ctx1)
         hash2 = cache._data_hash(ctx2)

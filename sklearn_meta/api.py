@@ -591,7 +591,7 @@ class GraphBuilder:
         if X.shape[1] == 0:
             raise ValueError("X must have at least one feature")
 
-        ctx = DataContext(X=X, y=y, groups=groups)
+        ctx = DataContext.from_Xy(X=X, y=y, groups=groups)
         orchestrator = self.create_orchestrator(search_backend, executor)
 
         return orchestrator.fit(ctx)

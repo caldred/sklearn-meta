@@ -276,27 +276,7 @@ class DataManager:
 
     def _subset_context(self, ctx: DataContext, indices: np.ndarray) -> DataContext:
         """Create a subset of the context for given indices."""
-        X_subset = ctx.X.iloc[indices].reset_index(drop=True)
-        y_subset = ctx.y.iloc[indices].reset_index(drop=True) if ctx.y is not None else None
-        groups_subset = (
-            ctx.groups.iloc[indices].reset_index(drop=True)
-            if ctx.groups is not None
-            else None
-        )
-        base_margin_subset = (
-            ctx.base_margin[indices] if ctx.base_margin is not None else None
-        )
-        upstream_subset = {k: v[indices] for k, v in ctx.upstream_outputs.items()}
-
-        return DataContext(
-            X=X_subset,
-            y=y_subset,
-            groups=groups_subset,
-            base_margin=base_margin_subset,
-            indices=indices,
-            upstream_outputs=upstream_subset,
-            metadata=ctx.metadata,
-        )
+        return ctx.with_indices(indices)
 
     def __repr__(self) -> str:
         return f"DataManager(cv_config={self.cv_config})"

@@ -286,13 +286,11 @@ class JointQuantileOrchestrator:
         if not upstream_props:
             return ctx
 
-        # Add actual Y values as features
-        X_augmented = ctx.X.copy()
-        for upstream_prop in upstream_props:
-            col_name = f"cond_{upstream_prop}"
-            X_augmented[col_name] = targets[upstream_prop].values
-
-        return ctx.with_X(X_augmented)
+        # Add actual Y values as conditioning features
+        cond_cols = {
+            f"cond_{prop}": targets[prop].values for prop in upstream_props
+        }
+        return ctx.with_columns(as_features=True, **cond_cols)
 
     def _fit_quantile_node(
         self,

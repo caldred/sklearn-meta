@@ -216,7 +216,7 @@ class TestJointQuantileE2E:
         )
 
         # 4. Fit
-        ctx = DataContext(X=X, y=targets["price"])
+        ctx = DataContext.from_Xy(X, targets["price"])
         fit_result = orchestrator.fit(ctx, targets)
 
         # 5. Create fitted graph for inference
@@ -261,7 +261,7 @@ class TestJointQuantileE2E:
             tuning_config=tuning_config,
         )
 
-        ctx = DataContext(X=X, y=targets["price"])
+        ctx = DataContext.from_Xy(X, targets["price"])
         fit_result = orchestrator.fit(ctx, targets)
 
         assert len(fit_result.fitted_nodes) == 3
@@ -299,7 +299,7 @@ class TestJointQuantileE2E:
             tuning_config=tuning_config,
         )
 
-        ctx = DataContext(X=X, y=targets["price"])
+        ctx = DataContext.from_Xy(X, targets["price"])
         fit_result = orchestrator.fit(ctx, targets)
 
         assert len(fit_result.fitted_nodes) == 3
@@ -331,7 +331,7 @@ class TestJointQuantileE2E:
             tuning_config=tuning_config,
         )
 
-        ctx = DataContext(X=X, y=targets["price"])
+        ctx = DataContext.from_Xy(X, targets["price"])
         targets_subset = {k: v for k, v in targets.items() if k in ["price", "volume"]}
         fit_result = orchestrator.fit(ctx, targets_subset)
 
@@ -362,7 +362,7 @@ class TestJointQuantileE2E:
             tuning_config=tuning_config,
         )
 
-        ctx = DataContext(X=X, y=targets["price"])
+        ctx = DataContext.from_Xy(X, targets["price"])
         targets_subset = {"price": targets["price"]}
         fit_result = orchestrator.fit(ctx, targets_subset)
 
@@ -402,7 +402,7 @@ class TestJointQuantileSampling:
             tuning_config=tuning_config,
         )
 
-        ctx = DataContext(X=X, y=targets["price"])
+        ctx = DataContext.from_Xy(X, targets["price"])
         fit_result = orchestrator.fit(ctx, targets)
         fitted_graph = JointQuantileFittedGraph.from_fit_result(fit_result)
 
@@ -431,7 +431,7 @@ class TestJointQuantileSampling:
             tuning_config=tuning_config,
         )
 
-        ctx = DataContext(X=X, y=targets["price"])
+        ctx = DataContext.from_Xy(X, targets["price"])
         targets_subset = {"price": targets["price"], "volume": targets["volume"]}
         fit_result = orchestrator.fit(ctx, targets_subset)
         fitted_graph = JointQuantileFittedGraph.from_fit_result(fit_result)
@@ -471,7 +471,7 @@ class TestEdgeCases:
             tuning_config=tuning_config,
         )
 
-        ctx = DataContext(X=X, y=targets["price"])
+        ctx = DataContext.from_Xy(X, targets["price"])
         fit_result = orchestrator.fit(ctx, {"price": targets["price"]})
 
         assert len(fit_result.fitted_nodes) == 1
@@ -495,7 +495,7 @@ class TestEdgeCases:
             tuning_config=tuning_config,
         )
 
-        ctx = DataContext(X=X, y=targets["price"])
+        ctx = DataContext.from_Xy(X, targets["price"])
         fit_result = orchestrator.fit(ctx, {
             "price": targets["price"],
             "volume": targets["volume"],
@@ -522,7 +522,7 @@ class TestEdgeCases:
             tuning_config=tuning_config,
         )
 
-        ctx = DataContext(X=X, y=targets["price"])
+        ctx = DataContext.from_Xy(X, targets["price"])
         fit_result = orchestrator.fit(ctx, {
             "price": targets["price"],
             "volume": targets["volume"],

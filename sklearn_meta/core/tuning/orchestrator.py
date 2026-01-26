@@ -428,7 +428,7 @@ class TuningOrchestrator:
 
             # Filter context to selected features
             if selected_features:
-                ctx = ctx.with_X(ctx.X[selected_features])
+                ctx = ctx.with_feature_cols(selected_features)
 
             # Retune if configured
             if self.tuning_config.feature_selection.retune_after_pruning:

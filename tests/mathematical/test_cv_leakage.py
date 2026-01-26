@@ -221,8 +221,8 @@ class TestIntentionalLeakDetection:
         X_leaked = X.copy()
         X_leaked["leak_feature"] = y.values
 
-        ctx_leaked = DataContext(X=X_leaked, y=y)
-        ctx_clean = DataContext(X=X, y=y)
+        ctx_leaked = DataContext.from_Xy(X_leaked, y)
+        ctx_clean = DataContext.from_Xy(X, y)
 
         cv_config = CVConfig(n_splits=5, strategy=CVStrategy.STRATIFIED, random_state=42)
         manager = DataManager(cv_config)
@@ -256,7 +256,7 @@ class TestIntentionalLeakDetection:
     def test_oof_score_matches_cv_average(self, classification_data):
         """Verify OOF score is consistent with CV fold scores."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         cv_config = CVConfig(n_splits=5, strategy=CVStrategy.STRATIFIED, random_state=42)
         manager = DataManager(cv_config)

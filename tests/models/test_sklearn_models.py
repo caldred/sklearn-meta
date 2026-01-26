@@ -440,7 +440,7 @@ class TestModelInPipeline:
     def test_multiple_models_in_pipeline(self, classification_data_small, mock_search_backend):
         """Verify multiple different model types work in pipeline."""
         X, y = classification_data_small
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         # Create nodes with different model types
         rf_node = ModelNode(

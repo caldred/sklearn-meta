@@ -261,7 +261,7 @@ class TestJointQuantileOrchestratorFit:
     ):
         """Verify fit returns JointQuantileFitResult."""
         X, targets = joint_regression_data
-        ctx = DataContext(X=X, y=targets["y1"])
+        ctx = DataContext.from_Xy(X, targets["y1"])
 
         orchestrator = JointQuantileOrchestrator(
             graph=joint_quantile_graph,
@@ -285,7 +285,7 @@ class TestJointQuantileOrchestratorFit:
     ):
         """Verify all properties are fitted."""
         X, targets = joint_regression_data
-        ctx = DataContext(X=X, y=targets["y1"])
+        ctx = DataContext.from_Xy(X, targets["y1"])
 
         orchestrator = JointQuantileOrchestrator(
             graph=joint_quantile_graph,
@@ -310,7 +310,7 @@ class TestJointQuantileOrchestratorFit:
     ):
         """Verify OOF predictions have correct shape."""
         X, targets = joint_regression_data
-        ctx = DataContext(X=X, y=targets["y1"])
+        ctx = DataContext.from_Xy(X, targets["y1"])
 
         orchestrator = JointQuantileOrchestrator(
             graph=joint_quantile_graph,
@@ -334,7 +334,7 @@ class TestJointQuantileOrchestratorFit:
     ):
         """Verify missing target raises error."""
         X, targets = joint_regression_data
-        ctx = DataContext(X=X, y=targets["y1"])
+        ctx = DataContext.from_Xy(X, targets["y1"])
 
         orchestrator = JointQuantileOrchestrator(
             graph=joint_quantile_graph,
@@ -363,7 +363,7 @@ class TestJointQuantileOrchestratorConditionalContext:
     ):
         """Verify first property has no conditioning features."""
         X, targets = joint_regression_data
-        ctx = DataContext(X=X, y=targets["y1"])
+        ctx = DataContext.from_Xy(X, targets["y1"])
 
         orchestrator = JointQuantileOrchestrator(
             graph=joint_quantile_graph,
@@ -389,7 +389,7 @@ class TestJointQuantileOrchestratorConditionalContext:
     ):
         """Verify second property has conditioning on first."""
         X, targets = joint_regression_data
-        ctx = DataContext(X=X, y=targets["y1"])
+        ctx = DataContext.from_Xy(X, targets["y1"])
 
         orchestrator = JointQuantileOrchestrator(
             graph=joint_quantile_graph,
@@ -415,7 +415,7 @@ class TestJointQuantileOrchestratorConditionalContext:
     ):
         """Verify third property has conditioning on first two."""
         X, targets = joint_regression_data
-        ctx = DataContext(X=X, y=targets["y1"])
+        ctx = DataContext.from_Xy(X, targets["y1"])
 
         orchestrator = JointQuantileOrchestrator(
             graph=joint_quantile_graph,
@@ -499,7 +499,7 @@ class TestJointQuantileFitResultMethods:
     ):
         """Verify get_node returns correct fitted node."""
         X, targets = joint_regression_data
-        ctx = DataContext(X=X, y=targets["y1"])
+        ctx = DataContext.from_Xy(X, targets["y1"])
 
         orchestrator = JointQuantileOrchestrator(
             graph=joint_quantile_graph,

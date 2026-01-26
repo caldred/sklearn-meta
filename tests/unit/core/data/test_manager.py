@@ -69,7 +69,7 @@ class TestDataManagerCreateFolds:
     def test_create_folds_without_y_raises(self, classification_data):
         """Verify create_folds raises error without target."""
         X, _ = classification_data
-        ctx = DataContext(X=X)
+        ctx = DataContext.from_Xy(X)
         manager = DataManager(CVConfig())
 
         with pytest.raises(ValueError, match="without target"):

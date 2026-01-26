@@ -231,7 +231,7 @@ class TestOrderSearchPluginSearchOrder:
     def test_search_order_returns_result(self, joint_data, joint_graph, orchestrator):
         """Verify search_order returns OrderSearchResult."""
         X, targets = joint_data
-        ctx = DataContext(X=X, y=targets["y1"])
+        ctx = DataContext.from_Xy(X, targets["y1"])
 
         plugin = OrderSearchPlugin(config=OrderSearchConfig(
             max_iterations=2,
@@ -254,7 +254,7 @@ class TestOrderSearchPluginSearchOrder:
     def test_search_order_preserves_constraints(self, joint_data, orchestrator):
         """Verify search preserves order constraints."""
         X, targets = joint_data
-        ctx = DataContext(X=X, y=targets["y1"])
+        ctx = DataContext.from_Xy(X, targets["y1"])
 
         # Create graph with constraint: y1 must be first
         config = JointQuantileConfig(
@@ -290,7 +290,7 @@ class TestOrderSearchPluginSearchOrder:
     def test_search_order_with_random_restarts(self, joint_data, joint_graph, orchestrator):
         """Verify random restarts are performed."""
         X, targets = joint_data
-        ctx = DataContext(X=X, y=targets["y1"])
+        ctx = DataContext.from_Xy(X, targets["y1"])
 
         plugin = OrderSearchPlugin(config=OrderSearchConfig(
             max_iterations=1,

@@ -14,15 +14,15 @@ class TestDataContextImmutability:
     def test_datacontext_is_frozen(self, classification_data):
         """Verify DataContext is frozen and cannot be mutated."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         with pytest.raises(FrozenInstanceError):
-            ctx.X = pd.DataFrame()
+            ctx.df = pd.DataFrame()
 
     def test_datacontext_with_methods_return_new_instance(self, classification_data):
         """Verify with_* methods return new instances."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         new_ctx = ctx.with_metadata("key", "value")
 
@@ -31,13 +31,56 @@ class TestDataContextImmutability:
         assert new_ctx.metadata == {"key": "value"}
 
 
+class TestDataContextFromXy:
+    """Tests for DataContext.from_Xy() factory."""
+
+    def test_from_xy_sets_feature_cols(self, classification_data):
+        """Verify from_Xy correctly sets feature_cols from X columns."""
+        X, y = classification_data
+        ctx = DataContext.from_Xy(X, y)
+
+        assert ctx.feature_cols == tuple(X.columns)
+
+    def test_from_xy_sets_target(self, classification_data):
+        """Verify from_Xy correctly sets the target."""
+        X, y = classification_data
+        ctx = DataContext.from_Xy(X, y)
+
+        assert ctx.target_col is not None
+        pd.testing.assert_series_equal(ctx.y, y, check_names=False)
+
+    def test_from_xy_sets_groups(self, grouped_data):
+        """Verify from_Xy correctly sets groups."""
+        X, y, groups = grouped_data
+        ctx = DataContext.from_Xy(X, y, groups=groups)
+
+        assert ctx.group_col is not None
+        pd.testing.assert_series_equal(ctx.groups, groups, check_names=False)
+
+    def test_from_xy_df_contains_all_columns(self, grouped_data):
+        """Verify df contains features, target, and groups."""
+        X, y, groups = grouped_data
+        ctx = DataContext.from_Xy(X, y, groups=groups)
+
+        # df should have feature cols + target + groups
+        assert len(ctx.df.columns) == len(X.columns) + 2
+
+    def test_from_xy_no_target(self, classification_data):
+        """Verify from_Xy works without y."""
+        X, _ = classification_data
+        ctx = DataContext.from_Xy(X)
+
+        assert ctx.target_col is None
+        assert ctx.y is None
+
+
 class TestDataContextWithSubset:
     """Tests for DataContext.with_indices()."""
 
     def test_with_indices_returns_correct_subset(self, classification_data):
         """Verify with_indices returns the correct data subset."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         indices = np.array([0, 5, 10, 15, 20])
         subset_ctx = ctx.with_indices(indices)
@@ -49,7 +92,7 @@ class TestDataContextWithSubset:
     def test_with_indices_preserves_feature_values(self, classification_data):
         """Verify subset X values match original at indices."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         indices = np.array([0, 5, 10])
         subset_ctx = ctx.with_indices(indices)
@@ -63,7 +106,7 @@ class TestDataContextWithSubset:
     def test_with_indices_preserves_target_values(self, classification_data):
         """Verify subset y values match original at indices."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         indices = np.array([0, 5, 10])
         subset_ctx = ctx.with_indices(indices)
@@ -74,7 +117,7 @@ class TestDataContextWithSubset:
     def test_with_indices_subsets_groups(self, grouped_data):
         """Verify groups are also subset correctly."""
         X, y, groups = grouped_data
-        ctx = DataContext(X=X, y=y, groups=groups)
+        ctx = DataContext.from_Xy(X, y, groups=groups)
 
         indices = np.array([0, 10, 20])  # Different groups
         subset_ctx = ctx.with_indices(indices)
@@ -82,28 +125,11 @@ class TestDataContextWithSubset:
         for i, idx in enumerate(indices):
             assert subset_ctx.groups.iloc[i] == groups.iloc[idx]
 
-    def test_with_indices_subsets_upstream_outputs(self, classification_data):
-        """Verify upstream outputs are subset correctly."""
-        X, y = classification_data
-        ctx = DataContext(X=X, y=y)
-
-        # Add upstream output
-        upstream = np.random.randn(len(X))
-        ctx = ctx.with_upstream_output("model_1", upstream)
-
-        indices = np.array([0, 5, 10])
-        subset_ctx = ctx.with_indices(indices)
-
-        np.testing.assert_array_almost_equal(
-            subset_ctx.upstream_outputs["model_1"],
-            upstream[indices],
-        )
-
     def test_with_indices_subsets_base_margin(self, classification_data):
         """Verify base margin is subset correctly."""
         X, y = classification_data
         base_margin = np.random.randn(len(X))
-        ctx = DataContext(X=X, y=y, base_margin=base_margin)
+        ctx = DataContext.from_Xy(X, y, base_margin=base_margin)
 
         indices = np.array([0, 5, 10])
         subset_ctx = ctx.with_indices(indices)
@@ -114,48 +140,59 @@ class TestDataContextWithSubset:
         )
 
 
-class TestDataContextWithUpstream:
-    """Tests for DataContext.with_upstream_output()."""
+class TestDataContextWithColumns:
+    """Tests for DataContext.with_columns()."""
 
-    def test_with_upstream_output_adds_output(self, classification_data):
-        """Verify with_upstream_output adds the output."""
+    def test_with_columns_adds_non_feature_column(self, classification_data):
+        """Verify with_columns adds a column without extending features."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
-        upstream = np.random.randn(len(X))
-        new_ctx = ctx.with_upstream_output("model_1", upstream)
+        new_col = np.random.randn(len(X))
+        new_ctx = ctx.with_columns(extra=new_col)
 
-        assert "model_1" in new_ctx.upstream_outputs
-        np.testing.assert_array_almost_equal(
-            new_ctx.upstream_outputs["model_1"],
-            upstream,
-        )
+        assert "extra" in new_ctx.df.columns
+        assert "extra" not in new_ctx.feature_cols
+        assert new_ctx.n_features == ctx.n_features
 
-    def test_with_upstream_output_preserves_original(self, classification_data):
+    def test_with_columns_adds_feature_column(self, classification_data):
+        """Verify with_columns(as_features=True) extends feature_cols."""
+        X, y = classification_data
+        ctx = DataContext.from_Xy(X, y)
+
+        new_col = np.random.randn(len(X))
+        new_ctx = ctx.with_columns(as_features=True, extra=new_col)
+
+        assert "extra" in new_ctx.df.columns
+        assert "extra" in new_ctx.feature_cols
+        assert new_ctx.n_features == ctx.n_features + 1
+
+    def test_with_columns_preserves_original(self, classification_data):
         """Verify original context is unchanged."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
-        upstream = np.random.randn(len(X))
-        new_ctx = ctx.with_upstream_output("model_1", upstream)
+        new_ctx = ctx.with_columns(as_features=True, extra=np.zeros(len(X)))
 
-        assert "model_1" not in ctx.upstream_outputs
-        assert len(ctx.upstream_outputs) == 0
+        assert "extra" not in ctx.df.columns
+        assert ctx.n_features == len(X.columns)
 
-    def test_multiple_upstream_outputs(self, classification_data):
-        """Verify multiple upstream outputs can be added."""
+
+class TestDataContextWithFeatureCols:
+    """Tests for DataContext.with_feature_cols()."""
+
+    def test_with_feature_cols_narrows_features(self, classification_data):
+        """Verify with_feature_cols narrows the feature set."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
+        subset = list(X.columns[:5])
 
-        upstream1 = np.random.randn(len(X))
-        upstream2 = np.random.randn(len(X))
+        new_ctx = ctx.with_feature_cols(subset)
 
-        ctx = ctx.with_upstream_output("model_1", upstream1)
-        ctx = ctx.with_upstream_output("model_2", upstream2)
-
-        assert len(ctx.upstream_outputs) == 2
-        assert "model_1" in ctx.upstream_outputs
-        assert "model_2" in ctx.upstream_outputs
+        assert new_ctx.n_features == 5
+        assert list(new_ctx.feature_cols) == subset
+        # df still has all columns
+        assert len(new_ctx.df.columns) == len(ctx.df.columns)
 
 
 class TestDataContextBaseMargin:
@@ -164,7 +201,7 @@ class TestDataContextBaseMargin:
     def test_with_base_margin_sets_margin(self, classification_data):
         """Verify with_base_margin sets the base margin."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         margin = np.random.randn(len(X))
         new_ctx = ctx.with_base_margin(margin)
@@ -172,18 +209,18 @@ class TestDataContextBaseMargin:
         np.testing.assert_array_almost_equal(new_ctx.base_margin, margin)
 
     def test_base_margin_shape_matches(self, classification_data):
-        """Verify base margin must match X length."""
+        """Verify base margin must match df length."""
         X, y = classification_data
         wrong_margin = np.random.randn(len(X) + 10)
 
         with pytest.raises(ValueError, match="same length"):
-            DataContext(X=X, y=y, base_margin=wrong_margin)
+            DataContext.from_Xy(X, y, base_margin=wrong_margin)
 
     def test_base_margin_preserved_in_copy(self, classification_data):
         """Verify base margin is preserved in copy."""
         X, y = classification_data
         margin = np.random.randn(len(X))
-        ctx = DataContext(X=X, y=y, base_margin=margin)
+        ctx = DataContext.from_Xy(X, y, base_margin=margin)
 
         copy_ctx = ctx.copy()
 
@@ -196,21 +233,21 @@ class TestDataContextProperties:
     def test_feature_columns_match_dataframe(self, classification_data):
         """Verify feature_names matches DataFrame columns."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         assert ctx.feature_names == list(X.columns)
 
     def test_n_samples_correct(self, classification_data):
         """Verify n_samples property is correct."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         assert ctx.n_samples == len(X)
 
     def test_n_features_correct(self, classification_data):
         """Verify n_features property is correct."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         assert ctx.n_features == X.shape[1]
 
@@ -224,7 +261,7 @@ class TestDataContextValidation:
         y_short = y.iloc[:100]
 
         with pytest.raises(ValueError, match="same length"):
-            DataContext(X=X, y=y_short)
+            DataContext.from_Xy(X, y_short)
 
     def test_x_groups_length_mismatch_raises(self, classification_data):
         """Verify X and groups length mismatch raises error."""
@@ -232,7 +269,20 @@ class TestDataContextValidation:
         groups = pd.Series(range(100))
 
         with pytest.raises(ValueError, match="same length"):
-            DataContext(X=X, y=y, groups=groups)
+            DataContext.from_Xy(X, y, groups=groups)
+
+    def test_missing_feature_col_raises(self, classification_data):
+        """Verify referencing missing feature columns raises error."""
+        X, y = classification_data
+        df = X.copy()
+        df["__target__"] = y.values
+
+        with pytest.raises(ValueError, match="feature_cols not found"):
+            DataContext(
+                df=df,
+                feature_cols=("nonexistent_col",),
+                target_col="__target__",
+            )
 
 
 class TestDataContextAugmentWithPredictions:
@@ -241,7 +291,7 @@ class TestDataContextAugmentWithPredictions:
     def test_augment_adds_prediction_columns(self, classification_data):
         """Verify predictions are added as columns."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         predictions = {"model_1": np.random.randn(len(X))}
         augmented = ctx.augment_with_predictions(predictions)
@@ -252,7 +302,7 @@ class TestDataContextAugmentWithPredictions:
     def test_augment_with_multiclass_probabilities(self, classification_data):
         """Verify multi-class probabilities are expanded."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         # 3-class probabilities
         proba = np.random.rand(len(X), 3)
@@ -267,7 +317,7 @@ class TestDataContextAugmentWithPredictions:
     def test_augment_preserves_original_features(self, classification_data):
         """Verify original features are preserved."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         predictions = {"model_1": np.random.randn(len(X))}
         augmented = ctx.augment_with_predictions(predictions)
@@ -282,7 +332,7 @@ class TestDataContextAugmentWithPredictions:
     def test_augment_with_custom_prefix(self, classification_data):
         """Verify custom prefix is applied."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         predictions = {"model_1": np.random.randn(len(X))}
         augmented = ctx.augment_with_predictions(predictions, prefix="oof_")
@@ -297,27 +347,26 @@ class TestDataContextCopy:
     def test_copy_creates_new_dataframe(self, classification_data):
         """Verify copy creates a new DataFrame."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         copy_ctx = ctx.copy()
 
-        assert copy_ctx.X is not ctx.X
+        assert copy_ctx.df is not ctx.df
         pd.testing.assert_frame_equal(copy_ctx.X, ctx.X)
 
-    def test_copy_creates_new_series(self, classification_data):
-        """Verify copy creates a new Series for y."""
+    def test_copy_creates_new_target(self, classification_data):
+        """Verify copy creates independent target data."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         copy_ctx = ctx.copy()
 
-        assert copy_ctx.y is not ctx.y
         pd.testing.assert_series_equal(copy_ctx.y, ctx.y)
 
     def test_copy_creates_new_metadata_dict(self, classification_data):
         """Verify copy creates a new metadata dict."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y, metadata={"key": "value"})
+        ctx = DataContext.from_Xy(X, y, metadata={"key": "value"})
 
         copy_ctx = ctx.copy()
 
@@ -331,9 +380,12 @@ class TestDataContextWithX:
     def test_with_x_replaces_features(self, classification_data):
         """Verify with_X replaces the feature DataFrame."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
-        new_X = pd.DataFrame(np.random.randn(len(X), 5))
+        new_X = pd.DataFrame(
+            np.random.randn(len(X), 5),
+            columns=[f"new_{i}" for i in range(5)],
+        )
         new_ctx = ctx.with_X(new_X)
 
         assert new_ctx.n_features == 5
@@ -342,12 +394,12 @@ class TestDataContextWithX:
     def test_with_x_preserves_y(self, classification_data):
         """Verify with_X preserves the target."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         new_X = pd.DataFrame(np.random.randn(len(X), 5))
         new_ctx = ctx.with_X(new_X)
 
-        pd.testing.assert_series_equal(new_ctx.y, y)
+        pd.testing.assert_series_equal(new_ctx.y, y, check_names=False)
 
 
 class TestDataContextWithY:
@@ -356,22 +408,37 @@ class TestDataContextWithY:
     def test_with_y_replaces_target(self, classification_data):
         """Verify with_y replaces the target Series."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         new_y = pd.Series(np.random.randn(len(X)))
         new_ctx = ctx.with_y(new_y)
 
-        pd.testing.assert_series_equal(new_ctx.y, new_y)
+        pd.testing.assert_series_equal(new_ctx.y, new_y, check_names=False)
 
     def test_with_y_preserves_x(self, classification_data):
         """Verify with_y preserves features."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         new_y = pd.Series(np.random.randn(len(X)))
         new_ctx = ctx.with_y(new_y)
 
         pd.testing.assert_frame_equal(new_ctx.X, X)
+
+
+class TestDataContextWithTargetCol:
+    """Tests for DataContext.with_target_col()."""
+
+    def test_with_target_col_switches_target(self, classification_data):
+        """Verify with_target_col can switch to a different column."""
+        X, y = classification_data
+        ctx = DataContext.from_Xy(X, y)
+        ctx = ctx.with_columns(alt_target=np.zeros(len(X)))
+
+        new_ctx = ctx.with_target_col("alt_target")
+
+        assert new_ctx.target_col == "alt_target"
+        np.testing.assert_array_equal(new_ctx.y.values, np.zeros(len(X)))
 
 
 class TestDataContextWithMetadata:
@@ -380,7 +447,7 @@ class TestDataContextWithMetadata:
     def test_with_metadata_adds_key(self, classification_data):
         """Verify with_metadata adds a key-value pair."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         new_ctx = ctx.with_metadata("key", "value")
 
@@ -389,7 +456,7 @@ class TestDataContextWithMetadata:
     def test_with_metadata_preserves_existing(self, classification_data):
         """Verify with_metadata preserves existing metadata."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y, metadata={"existing": "data"})
+        ctx = DataContext.from_Xy(X, y, metadata={"existing": "data"})
 
         new_ctx = ctx.with_metadata("key", "value")
 
@@ -399,7 +466,7 @@ class TestDataContextWithMetadata:
     def test_with_metadata_does_not_modify_original(self, classification_data):
         """Verify original metadata is unchanged."""
         X, y = classification_data
-        ctx = DataContext(X=X, y=y)
+        ctx = DataContext.from_Xy(X, y)
 
         new_ctx = ctx.with_metadata("key", "value")
 

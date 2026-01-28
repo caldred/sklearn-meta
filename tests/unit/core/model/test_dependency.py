@@ -17,9 +17,10 @@ class TestDependencyType:
             DependencyType.PROBA,
             DependencyType.BASE_MARGIN,
             DependencyType.CONDITIONAL_SAMPLE,
+            DependencyType.DISTILL,
         ]
 
-        assert len(DependencyType) == 6
+        assert len(DependencyType) == 7
         for dep_type in expected_types:
             assert dep_type in DependencyType
 
@@ -31,6 +32,7 @@ class TestDependencyType:
         assert DependencyType.PROBA.value == "proba"
         assert DependencyType.BASE_MARGIN.value == "base_margin"
         assert DependencyType.CONDITIONAL_SAMPLE.value == "conditional_sample"
+        assert DependencyType.DISTILL.value == "distill"
 
 
 class TestDependencyEdgeCreation:
@@ -152,6 +154,16 @@ class TestDependencyEdgeFeatureName:
         )
 
         assert edge.feature_name == "margin_base_model"
+
+    def test_feature_name_distill_default(self):
+        """Verify feature_name for distill type."""
+        edge = DependencyEdge(
+            source="teacher",
+            target="student",
+            dep_type=DependencyType.DISTILL,
+        )
+
+        assert edge.feature_name == "distill_teacher"
 
 
 class TestDependencyEdgeEquality:

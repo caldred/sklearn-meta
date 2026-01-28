@@ -176,10 +176,9 @@ class FittedGraph:
             elif edge.dep_type == DependencyType.TRANSFORM:
                 # TRANSFORM replaces features entirely
                 X_augmented = upstream_preds
-            elif edge.dep_type == DependencyType.BASE_MARGIN:
+            elif edge.dep_type in (DependencyType.BASE_MARGIN, DependencyType.DISTILL):
                 # BASE_MARGIN is handled via fit_params at training time;
-                # at inference we still need the predictions available but
-                # XGBoost doesn't use base_margin for predict() - it's baked in
+                # DISTILL only affects training loss, not inference.
                 pass
 
         # Ensemble predictions from all fold models
@@ -316,7 +315,10 @@ class TuningOrchestrator:
 
                 def fit_node_task(item: Tuple[str, ModelNode]) -> Tuple[str, FittedNode]:
                     name, node = item
-                    return (name, self._fit_node(node, layer_ctx))
+                    node_ctx = layer_ctx
+                    if node.is_distilled:
+                        node_ctx = self._inject_soft_targets(node_ctx, node, oof_cache)
+                    return (name, self._fit_node(node, node_ctx))
 
                 results = self.executor.map(fit_node_task, nodes_to_fit)
                 for name, fitted in results:
@@ -325,7 +327,10 @@ class TuningOrchestrator:
             else:
                 # Sequential fallback
                 for node_name, node in nodes_to_fit:
-                    fitted = self._fit_node(node, layer_ctx)
+                    node_ctx = layer_ctx
+                    if node.is_distilled:
+                        node_ctx = self._inject_soft_targets(node_ctx, node, oof_cache)
+                    fitted = self._fit_node(node, node_ctx)
                     fitted_nodes[node_name] = fitted
                     oof_cache[node_name] = fitted.oof_predictions
 
@@ -348,6 +353,9 @@ class TuningOrchestrator:
             if self.tuning_config.verbose >= 1:
                 logger.info(f"Fitting node: {node_name}")
 
+            if node.is_distilled:
+                node_ctx = self._inject_soft_targets(node_ctx, node, oof_cache)
+
             fitted = self._fit_node(node, node_ctx)
             fitted_nodes[node_name] = fitted
             oof_cache[node_name] = fitted.oof_predictions
@@ -365,6 +373,9 @@ class TuningOrchestrator:
 
             if node.is_conditional and not node.should_run(node_ctx):
                 continue
+
+            if node.is_distilled:
+                node_ctx = self._inject_soft_targets(node_ctx, node, oof_cache)
 
             # Use fixed params only
             cv_result = self._cross_validate(node, node_ctx, node.fixed_params)
@@ -596,6 +607,14 @@ class TuningOrchestrator:
         # Create and fit model
         model = node.create_estimator(params)
 
+        # Inject distillation objective if applicable
+        if node.is_distilled and train_ctx.soft_targets is not None:
+            from sklearn_meta.core.model.distillation import build_distillation_objective
+            custom_obj = build_distillation_objective(
+                train_ctx.soft_targets, node.distillation_config
+            )
+            model.set_params(objective=custom_obj)
+
         # Apply plugin fit param modifications
         fit_params = dict(node.fit_params)
         if self.plugin_registry:
@@ -676,6 +695,47 @@ class TuningOrchestrator:
         # We pass y_true as X since the wrapper ignores it
         return scorer(wrapper, y_true, y_true)
 
+    def _inject_soft_targets(
+        self,
+        ctx: DataContext,
+        node: ModelNode,
+        oof_cache: Dict[str, np.ndarray],
+    ) -> DataContext:
+        """Inject teacher soft targets into context for distillation."""
+        # Find teacher from DISTILL edge
+        teacher_name = None
+        for edge in self.graph.get_upstream(node.name):
+            if edge.dep_type == DependencyType.DISTILL:
+                teacher_name = edge.source
+                break
+
+        if teacher_name is None:
+            raise ValueError(
+                f"Node '{node.name}' has distillation_config but no DISTILL "
+                f"edge in the graph"
+            )
+
+        if teacher_name not in oof_cache:
+            raise ValueError(
+                f"Teacher '{teacher_name}' OOF predictions not found. "
+                f"Ensure the teacher is fitted before the student."
+            )
+
+        teacher_oof = oof_cache[teacher_name]
+
+        # Extract positive-class probability
+        if teacher_oof.ndim == 2 and teacher_oof.shape[1] == 2:
+            soft_targets = teacher_oof[:, 1]
+        elif teacher_oof.ndim == 1:
+            soft_targets = teacher_oof
+        else:
+            raise ValueError(
+                f"Teacher '{teacher_name}' OOF has unexpected shape "
+                f"{teacher_oof.shape}. Expected (n,) or (n, 2)."
+            )
+
+        return ctx.with_soft_targets(soft_targets)
+
     def _prepare_context_with_oof(
         self,
         ctx: DataContext,
@@ -687,6 +747,8 @@ class TuningOrchestrator:
         all_upstream = set()
         for node_name in node_names:
             for edge in self.graph.get_upstream(node_name):
+                if edge.dep_type == DependencyType.DISTILL:
+                    continue  # handled per-node, not as features
                 all_upstream.add(edge)
 
         if not all_upstream:

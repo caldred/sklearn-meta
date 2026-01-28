@@ -12,6 +12,7 @@ from sklearn_meta.core.data.manager import DataManager
 from sklearn_meta.core.model.node import ModelNode
 from sklearn_meta.core.model.graph import ModelGraph
 from sklearn_meta.core.model.dependency import DependencyType, DependencyEdge
+from sklearn_meta.core.model.distillation import DistillationConfig
 from sklearn_meta.core.tuning.orchestrator import TuningOrchestrator, TuningConfig
 from sklearn_meta.core.tuning.strategy import OptimizationStrategy
 from sklearn_meta.search.space import SearchSpace
@@ -47,6 +48,7 @@ __all__ = [
     "ModelGraph",
     "DependencyType",
     "DependencyEdge",
+    "DistillationConfig",
     # Tuning
     "TuningOrchestrator",
     "TuningConfig",

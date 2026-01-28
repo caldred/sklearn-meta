@@ -7,6 +7,7 @@ from typing import Any, Callable, Dict, List, Optional, Type, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sklearn_meta.core.data.context import DataContext
+    from sklearn_meta.core.model.distillation import DistillationConfig
     from sklearn_meta.search.space import SearchSpace
 
 
@@ -58,6 +59,7 @@ class ModelNode:
     fit_params: Dict[str, Any] = field(default_factory=dict)
     feature_cols: Optional[List[str]] = None
     description: str = ""
+    distillation_config: Optional[DistillationConfig] = None
 
     def __post_init__(self) -> None:
         """Validate node configuration."""
@@ -88,6 +90,16 @@ class ModelNode:
                     f"Estimator {self.estimator_class} must have a 'transform' method "
                     "for output_type='transform'"
                 )
+
+        # Validate distillation estimator compatibility
+        if self.distillation_config is not None:
+            from sklearn_meta.core.model.distillation import validate_distillation_estimator
+            validate_distillation_estimator(self.estimator_class)
+
+    @property
+    def is_distilled(self) -> bool:
+        """Whether this node uses knowledge distillation."""
+        return self.distillation_config is not None
 
     @property
     def has_search_space(self) -> bool:

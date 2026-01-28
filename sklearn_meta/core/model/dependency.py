@@ -28,6 +28,9 @@ class DependencyType(Enum):
     CONDITIONAL_SAMPLE = "conditional_sample"
     """Joint quantile: condition on sampled values from upstream property."""
 
+    DISTILL = "distill"
+    """Knowledge distillation: teacher's soft targets train the student."""
+
 
 @dataclass
 class ConditionalSampleConfig:
@@ -101,6 +104,7 @@ class DependencyEdge:
             DependencyType.FEATURE: "feat",
             DependencyType.BASE_MARGIN: "margin",
             DependencyType.CONDITIONAL_SAMPLE: "cond",
+            DependencyType.DISTILL: "distill",
         }
         prefix = prefix_map.get(self.dep_type, "out")
         return f"{prefix}_{self.source}"

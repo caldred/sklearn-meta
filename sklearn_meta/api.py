@@ -8,6 +8,7 @@ from sklearn_meta.core.data.context import DataContext
 from sklearn_meta.core.data.cv import CVConfig, CVStrategy
 from sklearn_meta.core.data.manager import DataManager
 from sklearn_meta.core.model.dependency import DependencyEdge, DependencyType
+from sklearn_meta.core.model.distillation import DistillationConfig
 from sklearn_meta.core.model.graph import ModelGraph
 from sklearn_meta.core.model.node import ModelNode, OutputType
 from sklearn_meta.core.tuning.orchestrator import (
@@ -52,6 +53,7 @@ class NodeBuilder:
         self._fit_params: Dict[str, Any] = {}
         self._feature_cols: Optional[List[str]] = None
         self._description = ""
+        self._distillation_config: Optional[DistillationConfig] = None
 
     def with_search_space(
         self,
@@ -216,6 +218,44 @@ class NodeBuilder:
         """
         return self.depends_on(*sources, dep_type=DependencyType.PROBA)
 
+    def distills(
+        self,
+        teacher: str,
+        temperature: float = 3.0,
+        alpha: float = 0.5,
+    ) -> NodeBuilder:
+        """
+        Set up knowledge distillation from a teacher node.
+
+        The student trains with a blended KL-divergence + cross-entropy loss
+        using the teacher's OOF probabilities as soft targets. Only one
+        teacher per student is supported.
+
+        Args:
+            teacher: Name of the teacher node.
+            temperature: Softens distributions before KL computation.
+            alpha: Blend weight: alpha * KL_soft + (1-alpha) * CE_hard.
+
+        Returns:
+            Self for chaining.
+        """
+        if self._distillation_config is not None:
+            raise ValueError(
+                f"Node '{self._name}' already has a distillation teacher. "
+                f"Only one teacher per student is supported."
+            )
+        self._distillation_config = DistillationConfig(
+            temperature=temperature, alpha=alpha
+        )
+        self._graph_builder._pending_edges.append(
+            DependencyEdge(
+                source=teacher,
+                target=self._name,
+                dep_type=DependencyType.DISTILL,
+            )
+        )
+        return self
+
     def _build(self) -> ModelNode:
         """Build the ModelNode."""
         return ModelNode(
@@ -229,6 +269,7 @@ class NodeBuilder:
             fit_params=self._fit_params,
             feature_cols=self._feature_cols,
             description=self._description,
+            distillation_config=self._distillation_config,
         )
 
     def add_model(

@@ -426,6 +426,161 @@ class TestDataContextWithY:
         pd.testing.assert_frame_equal(new_ctx.X, X)
 
 
+class TestDataContextSoftTargets:
+    """Tests for DataContext soft_targets handling."""
+
+    def test_soft_targets_default_none(self, classification_data):
+        """Verify soft_targets defaults to None."""
+        X, y = classification_data
+        ctx = DataContext.from_Xy(X, y)
+
+        assert ctx.soft_targets is None
+
+    def test_with_soft_targets(self, classification_data):
+        """Verify with_soft_targets sets soft targets."""
+        X, y = classification_data
+        ctx = DataContext.from_Xy(X, y)
+        st = np.random.rand(len(X))
+
+        new_ctx = ctx.with_soft_targets(st)
+
+        np.testing.assert_array_equal(new_ctx.soft_targets, st)
+        assert ctx.soft_targets is None  # original unchanged
+
+    def test_soft_targets_length_validation(self, classification_data):
+        """Verify soft_targets length must match df length."""
+        X, y = classification_data
+        wrong_st = np.random.rand(len(X) + 10)
+
+        with pytest.raises(ValueError, match="same length"):
+            DataContext(
+                df=X.copy().assign(__target__=y.values),
+                feature_cols=tuple(X.columns),
+                target_col="__target__",
+                soft_targets=wrong_st,
+            )
+
+    def test_with_indices_slices_soft_targets(self, classification_data):
+        """Verify with_indices correctly slices soft_targets."""
+        X, y = classification_data
+        st = np.random.rand(len(X))
+        ctx = DataContext.from_Xy(X, y)
+        ctx = ctx.with_soft_targets(st)
+
+        indices = np.array([0, 5, 10])
+        subset_ctx = ctx.with_indices(indices)
+
+        np.testing.assert_array_almost_equal(
+            subset_ctx.soft_targets,
+            st[indices],
+        )
+
+    def test_with_indices_none_soft_targets(self, classification_data):
+        """Verify with_indices works when soft_targets is None."""
+        X, y = classification_data
+        ctx = DataContext.from_Xy(X, y)
+
+        indices = np.array([0, 5, 10])
+        subset_ctx = ctx.with_indices(indices)
+
+        assert subset_ctx.soft_targets is None
+
+    def test_soft_targets_preserved_in_copy(self, classification_data):
+        """Verify soft_targets is preserved in copy."""
+        X, y = classification_data
+        st = np.random.rand(len(X))
+        ctx = DataContext.from_Xy(X, y)
+        ctx = ctx.with_soft_targets(st)
+
+        copy_ctx = ctx.copy()
+
+        np.testing.assert_array_almost_equal(copy_ctx.soft_targets, st)
+
+    def test_soft_targets_preserved_in_with_feature_cols(self, classification_data):
+        """Verify soft_targets propagated through with_feature_cols."""
+        X, y = classification_data
+        st = np.random.rand(len(X))
+        ctx = DataContext.from_Xy(X, y).with_soft_targets(st)
+
+        new_ctx = ctx.with_feature_cols(list(X.columns[:5]))
+
+        np.testing.assert_array_equal(new_ctx.soft_targets, st)
+
+    def test_soft_targets_preserved_in_with_columns(self, classification_data):
+        """Verify soft_targets propagated through with_columns."""
+        X, y = classification_data
+        st = np.random.rand(len(X))
+        ctx = DataContext.from_Xy(X, y).with_soft_targets(st)
+
+        new_ctx = ctx.with_columns(extra=np.zeros(len(X)))
+
+        np.testing.assert_array_equal(new_ctx.soft_targets, st)
+
+    def test_soft_targets_preserved_in_with_base_margin(self, classification_data):
+        """Verify soft_targets propagated through with_base_margin."""
+        X, y = classification_data
+        st = np.random.rand(len(X))
+        ctx = DataContext.from_Xy(X, y).with_soft_targets(st)
+
+        new_ctx = ctx.with_base_margin(np.zeros(len(X)))
+
+        np.testing.assert_array_equal(new_ctx.soft_targets, st)
+
+    def test_soft_targets_preserved_in_with_metadata(self, classification_data):
+        """Verify soft_targets propagated through with_metadata."""
+        X, y = classification_data
+        st = np.random.rand(len(X))
+        ctx = DataContext.from_Xy(X, y).with_soft_targets(st)
+
+        new_ctx = ctx.with_metadata("key", "value")
+
+        np.testing.assert_array_equal(new_ctx.soft_targets, st)
+
+    def test_soft_targets_preserved_in_augment_with_predictions(self, classification_data):
+        """Verify soft_targets propagated through augment_with_predictions."""
+        X, y = classification_data
+        st = np.random.rand(len(X))
+        ctx = DataContext.from_Xy(X, y).with_soft_targets(st)
+
+        predictions = {"model_1": np.random.randn(len(X))}
+        new_ctx = ctx.augment_with_predictions(predictions)
+
+        np.testing.assert_array_equal(new_ctx.soft_targets, st)
+
+    def test_soft_targets_preserved_in_with_X(self, classification_data):
+        """Verify soft_targets propagated through with_X."""
+        X, y = classification_data
+        st = np.random.rand(len(X))
+        ctx = DataContext.from_Xy(X, y).with_soft_targets(st)
+
+        new_X = pd.DataFrame(np.random.randn(len(X), 5))
+        new_ctx = ctx.with_X(new_X)
+
+        np.testing.assert_array_equal(new_ctx.soft_targets, st)
+
+    def test_soft_targets_preserved_in_with_y(self, classification_data):
+        """Verify soft_targets propagated through with_y."""
+        X, y = classification_data
+        st = np.random.rand(len(X))
+        ctx = DataContext.from_Xy(X, y).with_soft_targets(st)
+
+        new_y = pd.Series(np.random.randn(len(X)))
+        new_ctx = ctx.with_y(new_y)
+
+        np.testing.assert_array_equal(new_ctx.soft_targets, st)
+
+    def test_soft_targets_preserved_in_with_target_col(self, classification_data):
+        """Verify soft_targets propagated through with_target_col."""
+        X, y = classification_data
+        st = np.random.rand(len(X))
+        ctx = DataContext.from_Xy(X, y).with_soft_targets(st)
+        ctx = ctx.with_columns(alt_target=np.zeros(len(X)))
+
+        new_ctx = ctx.with_target_col("alt_target")
+
+        np.testing.assert_array_equal(new_ctx.soft_targets, st)
+
+
 class TestDataContextWithTargetCol:
     """Tests for DataContext.with_target_col()."""
 

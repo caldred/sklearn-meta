@@ -33,6 +33,7 @@ class DataContext:
     target_col: Optional[str] = None
     group_col: Optional[str] = None
     base_margin: Optional[np.ndarray] = None
+    soft_targets: Optional[np.ndarray] = None
     indices: Optional[np.ndarray] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
 
@@ -62,6 +63,13 @@ class DataContext:
             raise ValueError(
                 f"df and base_margin must have same length. "
                 f"Got df: {len(self.df)}, base_margin: {len(self.base_margin)}"
+            )
+
+        # Validate soft_targets length
+        if self.soft_targets is not None and len(self.df) != len(self.soft_targets):
+            raise ValueError(
+                f"df and soft_targets must have same length. "
+                f"Got df: {len(self.df)}, soft_targets: {len(self.soft_targets)}"
             )
 
         # Warn about NaN values in features
@@ -176,6 +184,7 @@ class DataContext:
             target_col=self.target_col,
             group_col=self.group_col,
             base_margin=self.base_margin,
+            soft_targets=self.soft_targets,
             indices=self.indices,
             metadata=self.metadata,
         )
@@ -188,6 +197,7 @@ class DataContext:
             target_col=col_name,
             group_col=self.group_col,
             base_margin=self.base_margin,
+            soft_targets=self.soft_targets,
             indices=self.indices,
             metadata=self.metadata,
         )
@@ -217,6 +227,7 @@ class DataContext:
             target_col=self.target_col,
             group_col=self.group_col,
             base_margin=self.base_margin,
+            soft_targets=self.soft_targets,
             indices=self.indices,
             metadata=self.metadata,
         )
@@ -229,6 +240,7 @@ class DataContext:
             target_col=self.target_col,
             group_col=self.group_col,
             base_margin=self.base_margin[indices] if self.base_margin is not None else None,
+            soft_targets=self.soft_targets[indices] if self.soft_targets is not None else None,
             indices=indices,
             metadata=self.metadata,
         )
@@ -241,6 +253,20 @@ class DataContext:
             target_col=self.target_col,
             group_col=self.group_col,
             base_margin=base_margin,
+            soft_targets=self.soft_targets,
+            indices=self.indices,
+            metadata=self.metadata,
+        )
+
+    def with_soft_targets(self, soft_targets: np.ndarray) -> DataContext:
+        """Create a new context with soft targets for distillation."""
+        return DataContext(
+            df=self.df,
+            feature_cols=self.feature_cols,
+            target_col=self.target_col,
+            group_col=self.group_col,
+            base_margin=self.base_margin,
+            soft_targets=soft_targets,
             indices=self.indices,
             metadata=self.metadata,
         )
@@ -255,6 +281,7 @@ class DataContext:
             target_col=self.target_col,
             group_col=self.group_col,
             base_margin=self.base_margin,
+            soft_targets=self.soft_targets,
             indices=self.indices,
             metadata=new_metadata,
         )
@@ -281,6 +308,7 @@ class DataContext:
             target_col=self.target_col,
             group_col=self.group_col,
             base_margin=self.base_margin,
+            soft_targets=self.soft_targets,
             indices=self.indices,
             metadata=self.metadata,
         )
@@ -304,6 +332,7 @@ class DataContext:
             target_col=target_col,
             group_col=self.group_col,
             base_margin=self.base_margin,
+            soft_targets=self.soft_targets,
             indices=self.indices,
             metadata=self.metadata,
         )
@@ -348,6 +377,7 @@ class DataContext:
             target_col=self.target_col,
             group_col=self.group_col,
             base_margin=self.base_margin,
+            soft_targets=self.soft_targets,
             indices=self.indices,
             metadata=self.metadata,
         )
@@ -364,6 +394,7 @@ class DataContext:
             target_col=self.target_col,
             group_col=self.group_col,
             base_margin=self.base_margin,
+            soft_targets=self.soft_targets,
             indices=self.indices,
             metadata=dict(self.metadata),
         )

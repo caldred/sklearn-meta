@@ -408,6 +408,73 @@ class TestModelNodeRepr:
         assert "RandomForestClassifier" in repr_str
 
 
+class TestModelNodeDistillation:
+    """Tests for distillation support on ModelNode."""
+
+    def test_distillation_config_field(self):
+        """Verify distillation_config field is set correctly."""
+        from sklearn_meta.core.model.distillation import DistillationConfig
+
+        class MockXGB:
+            def __init__(self, objective=None):
+                pass
+            def fit(self, X, y):
+                pass
+            def predict(self, X):
+                pass
+
+        config = DistillationConfig(temperature=5.0, alpha=0.3)
+        node = ModelNode(
+            name="student",
+            estimator_class=MockXGB,
+            distillation_config=config,
+        )
+
+        assert node.distillation_config is config
+        assert node.distillation_config.temperature == 5.0
+        assert node.distillation_config.alpha == 0.3
+
+    def test_is_distilled_true(self):
+        """Verify is_distilled is True when config is set."""
+        from sklearn_meta.core.model.distillation import DistillationConfig
+
+        class MockXGB:
+            def __init__(self, objective=None):
+                pass
+            def fit(self, X, y):
+                pass
+            def predict(self, X):
+                pass
+
+        node = ModelNode(
+            name="student",
+            estimator_class=MockXGB,
+            distillation_config=DistillationConfig(),
+        )
+
+        assert node.is_distilled is True
+
+    def test_is_distilled_false(self):
+        """Verify is_distilled is False when no config."""
+        node = ModelNode(
+            name="test",
+            estimator_class=LogisticRegression,
+        )
+
+        assert node.is_distilled is False
+
+    def test_distillation_rejects_incompatible_estimator(self):
+        """Verify distillation rejects estimators without objective param."""
+        from sklearn_meta.core.model.distillation import DistillationConfig
+
+        with pytest.raises(ValueError, match="does not support custom objectives"):
+            ModelNode(
+                name="test",
+                estimator_class=LogisticRegression,
+                distillation_config=DistillationConfig(),
+            )
+
+
 class TestOutputTypeConstants:
     """Tests for OutputType constants."""
 

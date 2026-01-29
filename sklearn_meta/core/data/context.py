@@ -72,14 +72,6 @@ class DataContext:
                 f"Got df: {len(self.df)}, soft_targets: {len(self.soft_targets)}"
             )
 
-        # Warn about NaN values in features
-        if self.feature_cols:
-            feature_df = self.df[list(self.feature_cols)]
-            if feature_df.isnull().any().any():
-                import warnings
-                nan_count = feature_df.isnull().sum().sum()
-                warnings.warn(f"Features contain {nan_count} NaN values")
-
     # -------------------------------------------------------------------------
     # Factory classmethods
     # -------------------------------------------------------------------------
